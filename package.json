@@ -1,0 +1,25 @@
+{
+  "name": "aws-cognito",
+  "version": "1.0.0",
+  "description": "AWS Cognito API",
+  "scripts": {
+    "build": "gulp",
+    "test": "nyc --reporter=html --reporter=text mocha --timeout 360000 'test/*.js' --recursive --reporter list"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/formkiq/aws-cognito.git"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/formkiq/parima/issues"
+  },
+  "homepage": "https://github.com/formkiq/parima#readme",
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-zip": "^5.0.2",
+    "mocha": "^8.1.3",
+    "nyc": "^15.1.0"
+  }
+}

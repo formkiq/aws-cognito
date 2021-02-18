@@ -1,0 +1,663 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Cognito
+
+Globals:
+  Function:
+    Timeout: 15
+
+Parameters:
+
+  UserPoolName:
+    Type: String
+    Description: Name of the User Pool.
+    AllowedPattern: ".+"
+
+  AllowAdminCreateUserOnly:
+    Default: "false"
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  PasswordMinimumLength:
+    Type: Number
+    Description: The minimum password length.
+    MinValue: "6"
+    MaxValue: "99"
+    Default: "8"
+    
+  PasswordRequireLowercase:
+    Description: Password requires at least one lowercase letter.
+    Default: "true"
+    Type: String
+    AllowedValues: ["true", "false"]
+    
+  PasswordRequireNumbers:
+    Description: Password requires at least one number.
+    Default: "true"
+    Type: String
+    AllowedValues: ["true", "false"]
+    
+  PasswordRequireSymbols:
+    Description: Password requires at least one symbol.
+    Default: "true"
+    Type: String
+    AllowedValues: ["true", "false"]
+    
+  PasswordRequireUppercase:
+    Description: Password requires at least one uppercase letter.
+    Default: "true"
+    Type: String
+    AllowedValues: ["true", "false"] 
+
+  Domain:
+    Description: Amazon Cognito domain to use (include full domain if CertificateArn used)
+    AllowedPattern: ".+"
+    Type: String
+
+  CertificateArn:
+    Description: Amazon Cognito Certificate ARN to use
+    Type: String
+    Default: ""
+
+  DNSName:
+    Description: Cognito CloudFront Domain Name
+    Type: String
+    Default: ""
+
+  HostedZone:
+    Type: String
+    Description: Route53 Hosted Zone to create DNS records in - see https://console.aws.amazon.com/route53/v2/HostedZones
+    Default: ""
+
+  SesSourceArn:
+    Type: String
+    Description: The Amazon Resource Name (ARN) of a verified email address in Amazon SES
+    Default: ""
+
+  ReplyToEmailAddress:
+    Type: String
+    Description: The destination to which the receiver of the email should reply to
+    Default: ""
+
+  RedirectUrl:
+    Type: String
+    Description: The URL to redirect to from Cognito Signup
+    AllowedPattern: ".+"
+
+Conditions:
+  HasCertificate: !Not [ !Equals [ !Ref CertificateArn, "" ]]
+  HasSesSourceArn: !Not [ !Equals [ !Ref SesSourceArn, "" ]]
+  HasReplyToEmailAddress: !Not [ !Equals [ !Ref ReplyToEmailAddress, "" ]]
+  HasNoCertificate: !Equals [ !Ref CertificateArn, "" ]
+  HasDNSName: !Not [ !Equals [ !Ref DNSName, "" ]]
+
+Resources:
+
+  HttpApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      AutoDeploy: true
+      Description: !Sub "${AWS::StackName}"
+      StageName: "$default"
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 200
+        ThrottlingRateLimit: 100
+
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Body:
+        openapi: "3.0.1"
+        info:
+          title: Cognito API
+          description: "Cognito HTTP API"
+          version: "1.0.0"
+        paths:
+          /confirmSignUp:
+            get:
+              description: Confirm User Signup.
+              tags:
+              - Cognito
+              responses:
+                "301":
+                  description: "301 response"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"
+          /confirmLostPassword:
+            post:
+              description: Confirm User Lost Password Signup.
+              tags:
+              - Cognito
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/CognitoLostPassword'              
+              responses:
+                "301":
+                  description: "301 response"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"                
+          /login:
+            post:
+              description: Cognito Login
+              tags:
+              - Cognito
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/CognitoLogin'
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+            options:
+              description: Cognito Login Options.
+              tags:
+              - Cognito     
+              responses:
+                "200":
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: string
+                  content: {}
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+          /register:
+            post:
+              description: Register Cognito User
+              tags:
+              - Cognito
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/CognitoRegisterUser'      
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+            options:
+              description: Register Cognito User Options.
+              tags:
+              - Cognito     
+              responses:
+                "200":
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: string
+                  content: {}
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+          /lostpassword:
+            post:
+              description: Lost Password
+              tags:
+              - Cognito
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/CognitoLostPasswordBody'      
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+            options:
+              description: Lost Password Options.
+              tags:
+              - Cognito     
+              responses:
+                "200":
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: string
+                  content: {}
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+          /changepassword:
+            post:
+              description: Change Password
+              tags:
+              - Cognito
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/CognitoChangePassword'      
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+            options:
+              description: Change Password Options.
+              tags:
+              - Cognito     
+              responses:
+                "200":
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: string
+                  content: {}
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+
+        components:
+          headers:
+            AccessControlAllowOrigin:
+              schema:
+                type: string
+            AccessControlAllowMethods:
+              schema:
+                type: string
+            AccessControlAllowHeaders:
+              schema:
+                type: string
+            Location:
+              schema:
+                type: string
+          schemas:
+            CognitoLogin:
+              required:
+              - "username"
+              - "password"
+              type: "object"
+              properties:
+                username:
+                  type: "string"
+                password:
+                  type: "string"
+            CognitoChangePassword:
+              required:
+              - "accesstoken"
+              - "password"
+              - "previouspassword"
+              type: "object"
+              properties:
+                accesstoken:
+                  type: "string"
+                password:
+                  type: "string"  
+                previouspassword:
+                  type: "string"                
+            CognitoLostPassword:
+              required:
+              - "username"
+              type: "object"
+              properties:
+                username:
+                  type: "string"    
+            CognitoRegisterUser:
+              required:
+              - "username"
+              - "password"
+              type: "object"
+              properties:
+                username:
+                  type: "string"
+                password:
+                  type: "string"
+            CognitoLostPasswordBody:
+              required:
+              - "username"
+              - "password"
+              - "code"
+              - "clientId"
+              type: "object"
+              properties:
+                username:
+                  type: "string"
+                password:
+                  type: "string"
+                code:
+                  type: "string"
+                clientId:
+                  type: "string"
+          x-amazon-apigateway-integrations:
+            lambdaApi200:
+              uri:
+                Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CognitoRequests.Arn}/invocations"
+              responses:
+                default:
+                  statusCode: "200"
+                  responseParameters:
+                    method.response.header.Access-Control-Allow-Methods: "'*'"
+                    method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+                    method.response.header.Access-Control-Allow-Origin: "'*'"
+              passthroughBehavior: "when_no_templates"
+              httpMethod: "POST"
+              type: "aws_proxy"
+              payloadFormatVersion: "1.0"  
+            lambdaApi301:
+              uri:
+                Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CognitoRequests.Arn}/invocations"
+              responses:
+                default:
+                  statusCode: "301"
+              passthroughBehavior: "when_no_templates"
+              httpMethod: "POST"
+              type: "aws_proxy"
+              payloadFormatVersion: "1.0"
+        x-amazon-apigateway-cors:
+          allowOrigins:
+          - "*"
+          maxAge: 3600
+          allowMethods:
+          - "*"
+          allowHeaders:
+          - "*"
+
+  HttpApiUrlParameter:
+    Type: AWS::SSM::Parameter
+    DependsOn:
+    - HttpApi
+    Properties:
+      Description: "The URL for the Cognito API endpoint"
+      Type: String      
+      Name: !Sub "/formkiq/cognito/${Domain}/CognitoHttpApiUrl"
+      Value: !GetAtt HttpApi.ApiEndpoint
+      Tags:
+        StackName: !Sub "${AWS::StackName}"
+
+  CustomMessageSignUpSubjectParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: "CustomMessage_SignUp Email Subject"
+      Type: String      
+      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_SignUp/Subject"
+      Value: "Your verification link"
+      Tags:
+        StackName: !Sub "${AWS::StackName}"
+
+  CustomMessageSignUpMessageParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: "CustomMessage_SignUp Email Message"
+      Type: String      
+      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_SignUp/Message"
+      Value: "Thank you for signing up. ${link}"
+      Tags:
+        StackName: !Sub "${AWS::StackName}"
+
+  CustomMessageForgotPasswordSubjectParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: "CustomMessage_ForgotPassword Email Subject"
+      Type: String      
+      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_ForgotPassword/Subject"
+      Value: "Your Reset Password link"
+      Tags:
+        StackName: !Sub "${AWS::StackName}"
+
+  CustomMessageForgotPasswordMessageParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: "CustomMessage_ForgotPassword Email Message"
+      Type: String      
+      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_ForgotPassword/Message"
+      Value: "You have requested a password reset. ${link}"
+      Tags:
+        StackName: !Sub "${AWS::StackName}"
+
+  CognitoRequests:
+    Type: AWS::Serverless::Function
+    DependsOn: CognitoRequestsRole
+    Properties:
+      Description: A Lambda function that redirects Signup, handles register, lostpassword & login Requests.
+      CodeUri: requests/
+      Handler: app.lambdaHandler
+      Runtime: nodejs14.x
+      MemorySize: 256
+      Timeout: 25
+      Role: !GetAtt [CognitoRequestsRole, Arn]
+      Environment:
+        Variables:
+          REGION: !Sub "${AWS::Region}"
+          USER_POOL_ID: !Ref CognitoUserPool
+          POOL_CLIENT_ID: !Ref CognitoUserPoolClient
+          REDIRECT_URI: !Ref RedirectUrl
+      Tags:
+        StackName: !Sub "${AWS::StackName}"
+
+  CognitoRequestsApiInvokePermission:
+    Type: "AWS::Lambda::Permission"
+    DependsOn:
+    - HttpApi
+    - CognitoRequests
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref CognitoRequests
+      Principal: apigateway.amazonaws.com
+
+  CognitoRequestsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Tags:
+        - Key: "StackName"
+          Value: !Sub "${AWS::StackName}"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+        -
+          PolicyName: apigatewaylambdarole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              Resource: "*"
+            - Effect: Allow
+              Action:
+              - cognito-idp:AdminCreateUser
+              Resource: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPool}'
+
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    DependsOn:
+    - CognitoCustomMessage
+    Properties:
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      UserPoolName: !Ref UserPoolName
+      EmailConfiguration:
+        EmailSendingAccount: !If [HasSesSourceArn, DEVELOPER, COGNITO_DEFAULT]
+        From: !If [HasReplyToEmailAddress, !Ref ReplyToEmailAddress, !Ref AWS::NoValue]
+        SourceArn: !If [HasSesSourceArn, !Ref SesSourceArn, !Ref AWS::NoValue]
+        ReplyToEmailAddress: !If [HasReplyToEmailAddress, !Ref ReplyToEmailAddress, !Ref AWS::NoValue]
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email        
+      MfaConfiguration: "OFF"
+      UsernameConfiguration:
+        CaseSensitive: false
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: !Sub "${AllowAdminCreateUserOnly}"
+      LambdaConfig:
+        CustomMessage: !GetAtt CognitoCustomMessage.Arn        
+      Policies:
+        PasswordPolicy:
+          MinimumLength: !Sub "${PasswordMinimumLength}"
+          RequireLowercase: !Sub "${PasswordRequireLowercase}"
+          RequireNumbers: !Sub "${PasswordRequireNumbers}"
+          RequireSymbols: !Sub "${PasswordRequireSymbols}"
+          RequireUppercase: !Sub "${PasswordRequireUppercase}"
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: false
+          Required: true
+      UserPoolTags:
+        StackName: !Sub "${AWS::StackName}"
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+  CognitoCustomMessage:  
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: custom_message/
+      Handler: app.lambdaHandler
+      Runtime: nodejs14.x
+      Role: !GetAtt CognitoCustomMessageRole.Arn
+      Environment:
+        Variables:
+          REDIRECT_URI: !Ref RedirectUrl
+          DOMAIN: !Ref Domain
+      Tags:
+        StackName: !Sub "${AWS::StackName}"
+
+  CognitoCustomMessagePermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+    - CognitoCustomMessage
+    - CognitoUserPool
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref CognitoCustomMessage
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt CognitoUserPool.Arn
+
+  CognitoCustomMessageRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Tags:
+        - Key: "StackName"
+          Value: !Sub "${AWS::StackName}"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: !Sub "${AWS::StackName}-CognitoCustomMessageRole"
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - ssm:GetParameters
+            Resource: 
+            - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/formkiq/cognito/*"
+
+  UserPoolDomainCustom: 
+    Type: AWS::Cognito::UserPoolDomain 
+    Condition: HasCertificate
+    Properties:
+      UserPoolId: !Ref CognitoUserPool 
+      Domain: !Ref Domain
+      CustomDomainConfig:
+        CertificateArn: !Ref CertificateArn
+
+  UserPoolDomain: 
+    Type: AWS::Cognito::UserPoolDomain 
+    Condition: HasNoCertificate
+    Properties:
+      UserPoolId: !Ref CognitoUserPool 
+      Domain: !Ref Domain
+
+  CognitoAuthRoute53Record:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: HasDNSName
+    Properties:
+      HostedZoneName: !Sub "${HostedZone}."
+      RecordSets:
+      - Name: !Ref Domain
+        Type: A
+        AliasTarget:
+          HostedZoneId: Z2FDTNDATAQYW2
+          DNSName: !Ref DNSName
+
+Outputs:
+  ApiEndpoint:
+    Description: The Cognito API endpoint
+    Value: !GetAtt HttpApi.ApiEndpoint

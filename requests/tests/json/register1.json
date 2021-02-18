@@ -1,0 +1,95 @@
+{
+    "version": "1.0",
+    "resource": "/register",
+    "path": "/register",
+    "httpMethod": "OPTIONS",
+    "headers": {
+        "Content-Length": "67",
+        "Content-Type": "application/json",
+        "Host": "1ya7xr1hqj.execute-api.us-east-2.amazonaws.com",
+        "Postman-Token": "8dffdc6c-af49-4c4f-b406-9d0d2d8b99fb",
+        "User-Agent": "PostmanRuntime/7.26.10",
+        "X-Amzn-Trace-Id": "Root=1-602c1223-30a1ab52787846bc6ba4ea30",
+        "X-Forwarded-For": "104.246.140.89",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br",
+        "cache-control": "no-cache"
+    },
+    "multiValueHeaders": {
+        "Content-Length": [
+            "67"
+        ],
+        "Content-Type": [
+            "application/json"
+        ],
+        "Host": [
+            "1ya7xr1hqj.execute-api.us-east-2.amazonaws.com"
+        ],
+        "Postman-Token": [
+            "8dffdc6c-af49-4c4f-b406-9d0d2d8b99fb"
+        ],
+        "User-Agent": [
+            "PostmanRuntime/7.26.10"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-602c1223-30a1ab52787846bc6ba4ea30"
+        ],
+        "X-Forwarded-For": [
+            "104.246.140.89"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "accept": [
+            "*/*"
+        ],
+        "accept-encoding": [
+            "gzip, deflate, br"
+        ],
+        "cache-control": [
+            "no-cache"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "requestContext": {
+        "accountId": "622653865277",
+        "apiId": "1ya7xr1hqj",
+        "domainName": "1ya7xr1hqj.execute-api.us-east-2.amazonaws.com",
+        "domainPrefix": "1ya7xr1hqj",
+        "extendedRequestId": "a2fFkgrQCYcENxA=",
+        "httpMethod": "OPTIONS",
+        "identity": {
+            "accessKey": null,
+            "accountId": null,
+            "caller": null,
+            "cognitoAmr": null,
+            "cognitoAuthenticationProvider": null,
+            "cognitoAuthenticationType": null,
+            "cognitoIdentityId": null,
+            "cognitoIdentityPoolId": null,
+            "principalOrgId": null,
+            "sourceIp": "104.246.140.89",
+            "user": null,
+            "userAgent": "PostmanRuntime/7.26.10",
+            "userArn": null
+        },
+        "path": "/register",
+        "protocol": "HTTP/1.1",
+        "requestId": "a2fFkgrQCYcENxA=",
+        "requestTime": "16/Feb/2021:18:42:43 +0000",
+        "requestTimeEpoch": 1613500963528,
+        "resourceId": "OPTIONS /register",
+        "resourcePath": "/register",
+        "stage": "$default"
+    },
+    "pathParameters": null,
+    "stageVariables": null,
+    "body": "{\n    \"username\":\"mfriesen@gmail.com\",\n    \"password\":\"qwerty123\"\n}",
+    "isBase64Encoded": false
+}
