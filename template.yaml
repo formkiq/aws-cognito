@@ -110,10 +110,20 @@ Resources:
       Body:
         openapi: "3.0.1"
         info:
-          title: Cognito API
+          title: !Sub "${UserPoolName} Cognito API"
           description: "Cognito HTTP API"
           version: "1.0.0"
         paths:
+          /confirmRegistration:
+            get:
+              description: Confirm User Registration.
+              tags:
+              - Cognito
+              responses:
+                "301":
+                  description: "301 response"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"          
           /confirmSignUp:
             get:
               description: Confirm User Signup.
@@ -123,7 +133,7 @@ Resources:
                 "301":
                   description: "301 response"
               x-amazon-apigateway-integration:
-                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"                
           /confirmLostPassword:
             post:
               description: Confirm User Lost Password Signup.
@@ -418,46 +428,6 @@ Resources:
       Tags:
         StackName: !Sub "${AWS::StackName}"
 
-  CustomMessageSignUpSubjectParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: "CustomMessage_SignUp Email Subject"
-      Type: String      
-      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_SignUp/Subject"
-      Value: "Your verification link"
-      Tags:
-        StackName: !Sub "${AWS::StackName}"
-
-  CustomMessageSignUpMessageParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: "CustomMessage_SignUp Email Message"
-      Type: String      
-      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_SignUp/Message"
-      Value: "Thank you for signing up. ${link}"
-      Tags:
-        StackName: !Sub "${AWS::StackName}"
-
-  CustomMessageForgotPasswordSubjectParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: "CustomMessage_ForgotPassword Email Subject"
-      Type: String      
-      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_ForgotPassword/Subject"
-      Value: "Your Reset Password link"
-      Tags:
-        StackName: !Sub "${AWS::StackName}"
-
-  CustomMessageForgotPasswordMessageParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: "CustomMessage_ForgotPassword Email Message"
-      Type: String      
-      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_ForgotPassword/Message"
-      Value: "You have requested a password reset. ${link}"
-      Tags:
-        StackName: !Sub "${AWS::StackName}"
-
   CognitoRequests:
     Type: AWS::Serverless::Function
     DependsOn: CognitoRequestsRole
@@ -572,6 +542,8 @@ Resources:
       ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
 
   CognitoCustomMessage:  
     Type: AWS::Serverless::Function
@@ -657,7 +629,38 @@ Resources:
           HostedZoneId: Z2FDTNDATAQYW2
           DNSName: !Ref DNSName
 
+  CognitoIdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: !Sub "${AWS::StackName}-identity-pool"
+      CognitoIdentityProviders: 
+        -
+          ClientId: !Ref CognitoUserPoolClient
+          ProviderName: !GetAtt CognitoUserPool.ProviderName
+      AllowUnauthenticatedIdentities: false
+
 Outputs:
   ApiEndpoint:
     Description: The Cognito API endpoint
     Value: !GetAtt HttpApi.ApiEndpoint
+  CognitoUserPoolId:
+    Description: The Cognito User Pool Id
+    Value: !Ref CognitoUserPool
+  CognitoUserPoolProviderName:
+    Description: The Cognito User Pool Provider Name
+    Value: !GetAtt CognitoUserPool.ProviderName
+  CognitoUserPoolProviderURL:
+    Description: The Cognito User Pool Provider URL
+    Value: !GetAtt CognitoUserPool.ProviderURL
+  CognitoUserPoolArn:
+    Description: The Cognito User Pool Arn
+    Value: !GetAtt CognitoUserPool.Arn
+  CognitoUserPoolClientId:
+    Description: The Cognito User Pool Client Id
+    Value: !Ref CognitoUserPoolClient
+  CognitoIdentityPoolId:
+    Description: Cognito Identity Pool
+    Value: !Ref CognitoIdentityPool
+  Domain:
+    Description: Amazon Cognito domain to use (include full domain if CertificateArn used)
+    Value: !Ref Domain
