@@ -23,6 +23,7 @@
     "nyc": "^15.1.0"
   },
   "dependencies": {
-    "aws-sdk": "^2.847.0"
+    "aws-sdk": "^2.847.0",
+    "gulp-run-command": "^0.0.10"
   }
 }

@@ -29,10 +29,10 @@ exports.lambdaHandler = async (event, context) => {
         return login(obj);
       } else if (path == "/changepassword") {
         return changepassword(obj);
-      } else if (path == "/lostpassword") {
-        return lostpassword(obj);
-      } else if (path == "/confirmLostPassword") {
-        return confirmLostPassword(obj);
+      } else if (path == "/forgotPassword") {
+        return forgotPassword(obj);
+      } else if (path == "/resetPassword") {
+        return resetPassword(obj);
       } else {
         return response(400, {message: "invalid request"});
       }
@@ -41,6 +41,8 @@ exports.lambdaHandler = async (event, context) => {
       return confirmSignUp(event);
     } else if (path != null && path == "/confirmRegistration") {
       return confirmRegistration(event);
+    } else if (event.httpMethod == "OPTIONS") {
+      return response(200, {message: "it's all good"});
     } else {
       return response(400, {message:"invalid body"});
     }
@@ -86,7 +88,7 @@ function confirmSignUp(event) {
   });
 }
 
-function confirmLostPassword(obj) {
+function resetPassword(obj) {
     
   let params = {
     ClientId: obj.clientId,
@@ -96,10 +98,10 @@ function confirmLostPassword(obj) {
   };
   
   return COGNITO_CLIENT.confirmForgotPassword(params).promise().then((data) => {
-    return response(301, process.env.REDIRECT_URI + "?success=true");
+    return response(200, {message:"Password Updated"});
   }).catch((error) => {
     console.log("ERROR: " + error);
-    return response(301, process.env.REDIRECT_URI + "?success=false");
+    return response(400, error);
   });
 }
 
@@ -128,14 +130,14 @@ function handleRegister(obj) {
 }
 
 function changepassword(obj) {
-  let requiredFields = ["accesstoken", "password", "previouspassword"];
+  let requiredFields = ["accessToken", "password", "previousPassword"];
 
   if (isValidFields(obj, requiredFields)) {
 
     var params = {
-      PreviousPassword: obj.previouspassword,
+      PreviousPassword: obj.previousPassword,
       ProposedPassword: obj.password,
-      AccessToken: obj.accesstoken
+      AccessToken: obj.accessToken
     };
 
     return COGNITO_CLIENT.changePassword(params).promise().then((data) => {
@@ -145,11 +147,11 @@ function changepassword(obj) {
     });
 
   } else {
-    return response(400, {message: "missing fields 'username','password','previouspassword'"});
+    return response(400, {message: "missing fields 'accessToken','password','previousPassword'"});
   }
 }
 
-function lostpassword(obj) {
+function forgotPassword(obj) {
   let requiredFields = ["username"];
 
   if (isValidFields(obj, requiredFields)) {

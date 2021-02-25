@@ -1,0 +1,115 @@
+{
+    "version": "1.0",
+    "resource": "/login",
+    "path": "/login",
+    "httpMethod": "OPTIONS",
+    "headers": {
+        "Content-Length": "0",
+        "Host": "dozyt8fyqh.execute-api.us-east-2.amazonaws.com",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
+        "X-Amzn-Trace-Id": "Root=1-60341a2a-4a65642936a3e52e0dd90bee",
+        "X-Forwarded-For": "50.72.149.55",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-CA,en-GB;q=0.9,en-US;q=0.8,en;q=0.7,fr;q=0.6",
+        "access-control-request-headers": "content-type",
+        "access-control-request-method": "POST",
+        "origin": "http://localhost:4200",
+        "referer": "http://localhost:4200/",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "cross-site"
+    },
+    "multiValueHeaders": {
+        "Content-Length": [
+            "0"
+        ],
+        "Host": [
+            "dozyt8fyqh.execute-api.us-east-2.amazonaws.com"
+        ],
+        "User-Agent": [
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-60341a2a-4a65642936a3e52e0dd90bee"
+        ],
+        "X-Forwarded-For": [
+            "50.72.149.55"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "accept": [
+            "*/*"
+        ],
+        "accept-encoding": [
+            "gzip, deflate, br"
+        ],
+        "accept-language": [
+            "en-CA,en-GB;q=0.9,en-US;q=0.8,en;q=0.7,fr;q=0.6"
+        ],
+        "access-control-request-headers": [
+            "content-type"
+        ],
+        "access-control-request-method": [
+            "POST"
+        ],
+        "origin": [
+            "http://localhost:4200"
+        ],
+        "referer": [
+            "http://localhost:4200/"
+        ],
+        "sec-fetch-dest": [
+            "empty"
+        ],
+        "sec-fetch-mode": [
+            "cors"
+        ],
+        "sec-fetch-site": [
+            "cross-site"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "requestContext": {
+        "accountId": "622653865277",
+        "apiId": "dozyt8fyqh",
+        "domainName": "dozyt8fyqh.execute-api.us-east-2.amazonaws.com",
+        "domainPrefix": "dozyt8fyqh",
+        "extendedRequestId": "bKkGlgx2CYcENxA=",
+        "httpMethod": "OPTIONS",
+        "identity": {
+            "accessKey": null,
+            "accountId": null,
+            "caller": null,
+            "cognitoAmr": null,
+            "cognitoAuthenticationProvider": null,
+            "cognitoAuthenticationType": null,
+            "cognitoIdentityId": null,
+            "cognitoIdentityPoolId": null,
+            "principalOrgId": null,
+            "sourceIp": "50.72.149.55",
+            "user": null,
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
+            "userArn": null
+        },
+        "path": "/login",
+        "protocol": "HTTP/1.1",
+        "requestId": "bKkGlgx2CYcENxA=",
+        "requestTime": "22/Feb/2021:20:55:06 +0000",
+        "requestTimeEpoch": 1614027306084,
+        "resourceId": "OPTIONS /login",
+        "resourcePath": "/login",
+        "stage": "$default"
+    },
+    "pathParameters": null,
+    "stageVariables": null,
+    "body": null,
+    "isBase64Encoded": false
+}

@@ -338,16 +338,16 @@ Resources:
                   type: "string"
             CognitoChangePassword:
               required:
-              - "accesstoken"
+              - "accessToken"
               - "password"
-              - "previouspassword"
+              - "previousPassword"
               type: "object"
               properties:
-                accesstoken:
+                accessToken:
                   type: "string"
                 password:
                   type: "string"  
-                previouspassword:
+                previousPassword:
                   type: "string"                
             CognitoLostPassword:
               required:
