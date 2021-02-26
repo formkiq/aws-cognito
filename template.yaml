@@ -134,7 +134,7 @@ Resources:
                   description: "301 response"
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"                
-          /confirmLostPassword:
+          /resetPassword:
             post:
               description: Confirm User Lost Password Signup.
               tags:
@@ -230,7 +230,7 @@ Resources:
                   content: {}
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
-          /lostpassword:
+          /forgotPassword:
             post:
               description: Lost Password
               tags:
@@ -270,7 +270,7 @@ Resources:
                   content: {}
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
-          /changepassword:
+          /changePassword:
             post:
               description: Change Password
               tags:
@@ -366,6 +366,8 @@ Resources:
                   type: "string"
                 password:
                   type: "string"
+                createNewGroup:
+                  type: "boolean"
             CognitoLostPasswordBody:
               required:
               - "username"
@@ -489,6 +491,8 @@ Resources:
             - Effect: Allow
               Action:
               - cognito-idp:AdminCreateUser
+              - cognito-idp:CreateGroup
+              - cognito-idp:AdminAddUserToGroup
               Resource: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPool}'
 
   CognitoUserPool:
@@ -641,7 +645,7 @@ Resources:
 
 Outputs:
   ApiEndpoint:
-    Description: The Cognito API endpoint
+    Description: The Cognito Login API endpoint
     Value: !GetAtt HttpApi.ApiEndpoint
   CognitoUserPoolId:
     Description: The Cognito User Pool Id

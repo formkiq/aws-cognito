@@ -1,7 +1,4 @@
 const AWS = require('aws-sdk');
-//const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
-//var CognitoUser = AmazonCognitoIdentity.CognitoUser;
-//var CognitoUserPool = AmazonCognitoIdentity.CognitoUserPool;
 
 const COGNITO_CLIENT = new AWS.CognitoIdentityServiceProvider({
   apiVersion: "2016-04-19",
@@ -27,7 +24,7 @@ exports.lambdaHandler = async (event, context) => {
         return handleRegister(obj);
       } else if (path == "/login") {
         return login(obj);
-      } else if (path == "/changepassword") {
+      } else if (path == "/changePassword") {
         return changepassword(obj);
       } else if (path == "/forgotPassword") {
         return forgotPassword(obj);
@@ -75,7 +72,7 @@ function confirmSignUp(event) {
   let userStatus = event.queryStringParameters.userStatus;
   
   let params = {
-    ClientId: clientId,
+    ClientId: process.env.POOL_CLIENT_ID,
     ConfirmationCode: code,
     Username: username
   };
@@ -91,7 +88,7 @@ function confirmSignUp(event) {
 function resetPassword(obj) {
     
   let params = {
-    ClientId: obj.clientId,
+    ClientId: process.env.POOL_CLIENT_ID,
     ConfirmationCode: obj.code,
     Username: obj.username,
     Password: obj.password
@@ -110,6 +107,8 @@ function handleRegister(obj) {
 
   if (isValidFields(obj, requiredFields)) {
 
+    let createGroup = obj.createNewGroup != null;
+
     var params = {
       ClientId: process.env.POOL_CLIENT_ID,
       Password: obj.password,
@@ -117,8 +116,27 @@ function handleRegister(obj) {
     };
 
     return COGNITO_CLIENT.signUp(params).promise().then((data) => {
-      console.log("DATA: " + data);
-      return response(200, {message:"User registered"});
+
+      var groupName = randomString(10, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+      var params = {
+        GroupName: groupName,
+        UserPoolId: process.env.USER_POOL_ID
+      };
+
+      return createGroup ? COGNITO_CLIENT.createGroup(params).promise().then((data) => {
+
+        var params = {
+          GroupName: groupName,
+          UserPoolId: process.env.USER_POOL_ID,
+          Username: obj.username
+        };
+
+        return COGNITO_CLIENT.adminAddUserToGroup(params).promise().then(() => {
+          return response(200, {message:"User registered"});
+        });
+
+      }) : response(200, {message:"User registered"});
+
     }).catch((error) => {
       console.log("ERROR: " + error);
       return response(400, error);
@@ -225,4 +243,10 @@ function isValidFields(obj, requiredFields) {
   });
   
   return valid;
+}
+
+function randomString(length, chars) {
+    var result = '';
+    for (var i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+    return result;
 }

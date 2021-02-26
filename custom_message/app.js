@@ -60,7 +60,7 @@ exports.lambdaHandler = async (event, context, callback) => {
             const link = `<a href="${urlCache.Value}/confirmSignUp?userStatus=${userStatus}&code=${codeParameter}&username=${userName}&clientId=${clientId}&region=${region}&email=${email}" target="_blank">Click this link to verify</a>`;
 
             event.response.emailSubject = subject;
-            event.response.emailMessage = message.replace("${link}", link);
+            event.response.emailMessage = processMessage(event.request.userAttributes, message, link);
 
         } else if (event.triggerSource === "CustomMessage_ForgotPassword") {
 
@@ -73,7 +73,7 @@ exports.lambdaHandler = async (event, context, callback) => {
             const link = `<a href="${process.env.REDIRECT_URI}/lostpassword?userStatus=${userStatus}&code=${codeParameter}&username=${userName}&clientId=${clientId}&region=${region}&email=${email}" target="_blank">Click this link to Reset Password</a>`;
 
             event.response.emailSubject = subject;
-            event.response.emailMessage = message.replace("${link}", link);
+            event.response.emailMessage = processMessage(event.request.userAttributes, message, link);
 
         } else if (event.triggerSource == "CustomMessage_AdminCreateUser") {
     
@@ -87,7 +87,7 @@ exports.lambdaHandler = async (event, context, callback) => {
             const link = `<a href="${urlCache.Value}/confirmRegistration?userStatus=${userStatus}&code=${codeParameter}&username=${userName}&clientId=${clientId}&region=${region}&email=${usernameParameter}" target="_blank">Click this link to finalize your account.</a>`;
 
             event.response.emailSubject = subject;
-            event.response.emailMessage = message.replace("${link}", link);
+            event.response.emailMessage = processMessage(event.request.userAttributes, message, link);
         }
 
         console.log(JSON.stringify(event.response));
@@ -99,6 +99,11 @@ exports.lambdaHandler = async (event, context, callback) => {
         console.log("ERRO!: " + err);
     });
 };
+
+function processMessage(userAttributes, message, link) {
+    const { email } = userAttributes;
+    return message.replace("${link}", link).replace("${email}", email);
+}
 
 async function getParameter(event) {
     return ssm.getParameters({Names:["/formkiq/cognito/" + process.env.DOMAIN + "/CognitoHttpApiUrl", 
