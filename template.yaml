@@ -112,7 +112,7 @@ Resources:
         info:
           title: !Sub "${UserPoolName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.0.0"
+          version: "1.0.1"
         paths:
           /confirmRegistration:
             get:
@@ -190,6 +190,46 @@ Resources:
                   content: {}
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+          /refreshToken:
+            post:
+              description: Refresh Cognito Login
+              tags:
+              - Cognito
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/RefreshToken'
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+            options:
+              description: Cognito Login Options.
+              tags:
+              - Cognito     
+              responses:
+                "200":
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: string
+                  content: {}
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"                
           /register:
             post:
               description: Register Cognito User
@@ -326,6 +366,13 @@ Resources:
               schema:
                 type: string
           schemas:
+            RefreshToken:
+              required:
+              - "refreshToken"
+              type: "object"
+              properties:
+                refreshToken:
+                  type: "string"
             CognitoLogin:
               required:
               - "username"

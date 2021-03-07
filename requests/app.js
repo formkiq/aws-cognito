@@ -30,6 +30,8 @@ exports.lambdaHandler = async (event, context) => {
         return forgotPassword(obj);
       } else if (path == "/resetPassword") {
         return resetPassword(obj);
+      } else if (path == "/refreshToken") {
+        return refreshToken(obj);
       } else {
         return response(400, {message: "invalid request"});
       }
@@ -201,6 +203,30 @@ function login(obj) {
       AuthParameters: {
         'USERNAME': obj.username,
         'PASSWORD': obj.password
+      }
+    };
+
+    return COGNITO_CLIENT.initiateAuth(params).promise().then((data) => {
+      return response(200, data);
+    }).catch((error) => {
+      return response(400, error);
+    });
+
+  } else {
+    return response(400, {message: "missing fields 'username'"});
+  }
+}
+
+function refreshToken(obj) {
+  let requiredFields = ["refreshToken"];
+
+  if (isValidFields(obj, requiredFields)) {
+
+    var params = {
+      AuthFlow: "REFRESH_TOKEN_AUTH",
+      ClientId: process.env.POOL_CLIENT_ID,
+      AuthParameters: {
+        'REFRESH_TOKEN': obj.refreshToken
       }
     };
 
