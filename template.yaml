@@ -109,14 +109,18 @@ Resources:
       DefaultRouteSettings:
         ThrottlingBurstLimit: 200
         ThrottlingRateLimit: 100
+      Tags:
+        StackName: !Sub "${AWS::StackName}" 
 
   HttpApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
+      Tags:
+        StackName: !Sub "${AWS::StackName}"       
       Body:
         openapi: "3.0.1"
         info:
-          title: !Sub "${UserPoolName} Cognito API"
+          title: !Sub "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
           version: "1.0.1"
         paths:
