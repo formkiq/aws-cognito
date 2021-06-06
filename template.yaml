@@ -54,19 +54,19 @@ Parameters:
     AllowedPattern: ".+"
     Type: String
 
-  CertificateArn:
+  DomainCertificateArn:
     Description: Amazon Cognito Certificate ARN to use
     Type: String
     Default: ""
 
-  DNSName:
-    Description: Cognito CloudFront Domain Name
+  ApiDomain:
+    Description: Amazon API domain to use (include full domain if ApiDomainCertificateArn used)
     Type: String
     Default: ""
 
-  HostedZone:
+  ApiDomainCertificateArn:
+    Description: Amazon API domain Certificate ARN to use
     Type: String
-    Description: Route53 Hosted Zone to create DNS records in - see https://console.aws.amazon.com/route53/v2/HostedZones
     Default: ""
 
   SesSourceArn:
@@ -84,12 +84,18 @@ Parameters:
     Description: The URL to redirect to from Cognito Signup
     AllowedPattern: ".+"
 
+  HostedZone:
+    Description: Amazon API domain Certificate ARN to use
+    Type: String
+    Description: Route53 Hosted Zone to create DNS records in - see https://console.aws.amazon.com/route53/v2/HostedZones
+    Default: ""
+
 Conditions:
-  HasCertificate: !Not [ !Equals [ !Ref CertificateArn, "" ]]
+  HasDomainCertificate: !Not [ !Equals [ !Ref DomainCertificateArn, "" ]]
   HasSesSourceArn: !Not [ !Equals [ !Ref SesSourceArn, "" ]]
   HasReplyToEmailAddress: !Not [ !Equals [ !Ref ReplyToEmailAddress, "" ]]
-  HasNoCertificate: !Equals [ !Ref CertificateArn, "" ]
-  HasDNSName: !Not [ !Equals [ !Ref DNSName, "" ]]
+  HasNoDomainCertificate: !Equals [ !Ref DomainCertificateArn, "" ]
+  ApiDomainCertificateArn: !Not [ !Equals [ !Ref ApiDomainCertificateArn, "" ]]
 
 Resources:
 
@@ -103,17 +109,31 @@ Resources:
       DefaultRouteSettings:
         ThrottlingBurstLimit: 200
         ThrottlingRateLimit: 100
+      Tags:
+        StackName: !Sub "${AWS::StackName}" 
 
   HttpApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
+      Tags:
+        StackName: !Sub "${AWS::StackName}"       
       Body:
         openapi: "3.0.1"
         info:
-          title: Cognito API
+          title: !Sub "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.0.0"
+          version: "1.0.1"
         paths:
+          /confirmRegistration:
+            get:
+              description: Confirm User Registration.
+              tags:
+              - Cognito
+              responses:
+                "301":
+                  description: "301 response"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"          
           /confirmSignUp:
             get:
               description: Confirm User Signup.
@@ -123,8 +143,8 @@ Resources:
                 "301":
                   description: "301 response"
               x-amazon-apigateway-integration:
-                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"
-          /confirmLostPassword:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"                
+          /resetPassword:
             post:
               description: Confirm User Lost Password Signup.
               tags:
@@ -180,6 +200,46 @@ Resources:
                   content: {}
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+          /refreshToken:
+            post:
+              description: Refresh Cognito Login
+              tags:
+              - Cognito
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/RefreshToken'
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+            options:
+              description: Cognito Login Options.
+              tags:
+              - Cognito     
+              responses:
+                "200":
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: string
+                  content: {}
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"                
           /register:
             post:
               description: Register Cognito User
@@ -220,7 +280,7 @@ Resources:
                   content: {}
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
-          /lostpassword:
+          /forgotPassword:
             post:
               description: Lost Password
               tags:
@@ -260,7 +320,7 @@ Resources:
                   content: {}
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
-          /changepassword:
+          /changePassword:
             post:
               description: Change Password
               tags:
@@ -316,6 +376,13 @@ Resources:
               schema:
                 type: string
           schemas:
+            RefreshToken:
+              required:
+              - "refreshToken"
+              type: "object"
+              properties:
+                refreshToken:
+                  type: "string"
             CognitoLogin:
               required:
               - "username"
@@ -328,16 +395,16 @@ Resources:
                   type: "string"
             CognitoChangePassword:
               required:
-              - "accesstoken"
+              - "accessToken"
               - "password"
-              - "previouspassword"
+              - "previousPassword"
               type: "object"
               properties:
-                accesstoken:
+                accessToken:
                   type: "string"
                 password:
                   type: "string"  
-                previouspassword:
+                previousPassword:
                   type: "string"                
             CognitoLostPassword:
               required:
@@ -356,6 +423,8 @@ Resources:
                   type: "string"
                 password:
                   type: "string"
+                createNewGroup:
+                  type: "boolean"
             CognitoLostPasswordBody:
               required:
               - "username"
@@ -415,46 +484,6 @@ Resources:
       Type: String      
       Name: !Sub "/formkiq/cognito/${Domain}/CognitoHttpApiUrl"
       Value: !GetAtt HttpApi.ApiEndpoint
-      Tags:
-        StackName: !Sub "${AWS::StackName}"
-
-  CustomMessageSignUpSubjectParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: "CustomMessage_SignUp Email Subject"
-      Type: String      
-      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_SignUp/Subject"
-      Value: "Your verification link"
-      Tags:
-        StackName: !Sub "${AWS::StackName}"
-
-  CustomMessageSignUpMessageParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: "CustomMessage_SignUp Email Message"
-      Type: String      
-      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_SignUp/Message"
-      Value: "Thank you for signing up. ${link}"
-      Tags:
-        StackName: !Sub "${AWS::StackName}"
-
-  CustomMessageForgotPasswordSubjectParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: "CustomMessage_ForgotPassword Email Subject"
-      Type: String      
-      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_ForgotPassword/Subject"
-      Value: "Your Reset Password link"
-      Tags:
-        StackName: !Sub "${AWS::StackName}"
-
-  CustomMessageForgotPasswordMessageParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: "CustomMessage_ForgotPassword Email Message"
-      Type: String      
-      Name: !Sub "/formkiq/cognito/${Domain}/CustomMessage_ForgotPassword/Message"
-      Value: "You have requested a password reset. ${link}"
       Tags:
         StackName: !Sub "${AWS::StackName}"
 
@@ -519,6 +548,8 @@ Resources:
             - Effect: Allow
               Action:
               - cognito-idp:AdminCreateUser
+              - cognito-idp:CreateGroup
+              - cognito-idp:AdminAddUserToGroup
               Resource: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPool}'
 
   CognitoUserPool:
@@ -572,6 +603,8 @@ Resources:
       ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
 
   CognitoCustomMessage:  
     Type: AWS::Serverless::Function
@@ -631,33 +664,85 @@ Resources:
 
   UserPoolDomainCustom: 
     Type: AWS::Cognito::UserPoolDomain 
-    Condition: HasCertificate
+    Condition: HasDomainCertificate
     Properties:
       UserPoolId: !Ref CognitoUserPool 
       Domain: !Ref Domain
       CustomDomainConfig:
-        CertificateArn: !Ref CertificateArn
+        CertificateArn: !Ref DomainCertificateArn
 
   UserPoolDomain: 
     Type: AWS::Cognito::UserPoolDomain 
-    Condition: HasNoCertificate
+    Condition: HasNoDomainCertificate
     Properties:
       UserPoolId: !Ref CognitoUserPool 
       Domain: !Ref Domain
 
-  CognitoAuthRoute53Record:
-    Type: AWS::Route53::RecordSetGroup
-    Condition: HasDNSName
+  CognitoIdentityPool:
+    Type: AWS::Cognito::IdentityPool
     Properties:
-      HostedZoneName: !Sub "${HostedZone}."
-      RecordSets:
-      - Name: !Ref Domain
-        Type: A
-        AliasTarget:
-          HostedZoneId: Z2FDTNDATAQYW2
-          DNSName: !Ref DNSName
+      IdentityPoolName: !Sub "${AWS::StackName}-identity-pool"
+      CognitoIdentityProviders: 
+        -
+          ClientId: !Ref CognitoUserPoolClient
+          ProviderName: !GetAtt CognitoUserPool.ProviderName
+      AllowUnauthenticatedIdentities: false
+
+  ApiDomainName:
+    Type: AWS::ApiGatewayV2::DomainName
+    Condition: ApiDomainCertificateArn
+    Properties: 
+      DomainName: !Ref ApiDomain
+      DomainNameConfigurations:
+      - CertificateArn: !Ref ApiDomainCertificateArn
+      Tags:
+        StackName: !Sub "${AWS::StackName}"
+
+  ApiDomainMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Condition: ApiDomainCertificateArn
+    DependsOn:
+    - HttpApiStage
+    - HttpApi
+    - ApiRoute53
+    Properties:
+      ApiId: !Ref HttpApi
+      DomainName: !Ref ApiDomain
+      Stage: "$default"
+
+  ApiRoute53:
+    Type: AWS::Route53::RecordSet
+    Condition: ApiDomainCertificateArn
+    Properties:
+      Name: !Ref ApiDomain
+      HostedZoneName: !Ref HostedZone
+      Type: A
+      AliasTarget:
+        HostedZoneId: !GetAtt ApiDomainName.RegionalHostedZoneId
+        DNSName: !GetAtt ApiDomainName.RegionalDomainName
 
 Outputs:
   ApiEndpoint:
-    Description: The Cognito API endpoint
+    Description: The Cognito Login API endpoint
     Value: !GetAtt HttpApi.ApiEndpoint
+  CognitoUserPoolId:
+    Description: The Cognito User Pool Id
+    Value: !Ref CognitoUserPool
+  CognitoUserPoolProviderName:
+    Description: The Cognito User Pool Provider Name
+    Value: !GetAtt CognitoUserPool.ProviderName
+  CognitoUserPoolProviderURL:
+    Description: The Cognito User Pool Provider URL
+    Value: !GetAtt CognitoUserPool.ProviderURL
+  CognitoUserPoolArn:
+    Description: The Cognito User Pool Arn
+    Value: !GetAtt CognitoUserPool.Arn
+  CognitoUserPoolClientId:
+    Description: The Cognito User Pool Client Id
+    Value: !Ref CognitoUserPoolClient
+  CognitoIdentityPoolId:
+    Description: Cognito Identity Pool
+    Value: !Ref CognitoIdentityPool
+  Domain:
+    Description: Amazon Cognito domain to use (include full domain if CertificateArn used)
+    Value: !Ref Domain

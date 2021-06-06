@@ -7,6 +7,7 @@
   "author": "SAM CLI",
   "license": "MIT",
   "dependencies": {
+    "amazon-cognito-identity-js": "^4.5.11",
     "axios": "^0.21.1"
   },
   "scripts": {
