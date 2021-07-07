@@ -90,6 +90,16 @@ Parameters:
     Description: Route53 Hosted Zone to create DNS records in - see https://console.aws.amazon.com/route53/v2/HostedZones
     Default: ""
 
+  AccessTokenValidity:
+    Description: The time limit, after which the access token is no longer valid and cannot be used.
+    Type: Number
+    Default: 24
+
+  IdTokenValidity:
+    Description: The time limit, after which the ID token is no longer valid and cannot be used.
+    Type: Number
+    Default: 24
+
 Conditions:
   HasDomainCertificate: !Not [ !Equals [ !Ref DomainCertificateArn, "" ]]
   HasSesSourceArn: !Not [ !Equals [ !Ref SesSourceArn, "" ]]
@@ -115,14 +125,12 @@ Resources:
   HttpApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
-      Tags:
-        StackName: !Sub "${AWS::StackName}"       
       Body:
         openapi: "3.0.1"
         info:
           title: !Sub "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.0.1"
+          version: "1.0.2"
         paths:
           /confirmRegistration:
             get:
@@ -600,6 +608,8 @@ Resources:
     Properties:
       UserPoolId: !Ref CognitoUserPool
       PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: !Ref AccessTokenValidity
+      IdTokenValidity: !Ref IdTokenValidity
       ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
