@@ -130,7 +130,7 @@ Resources:
         info:
           title: !Sub "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.0.2"
+          version: "1.0.3"
         paths:
           /confirmRegistration:
             get:
@@ -674,6 +674,8 @@ Resources:
 
   UserPoolDomainCustom: 
     Type: AWS::Cognito::UserPoolDomain 
+    DependsOn:
+    - CognitoUserPool
     Condition: HasDomainCertificate
     Properties:
       UserPoolId: !Ref CognitoUserPool 
@@ -683,9 +685,11 @@ Resources:
 
   UserPoolDomain: 
     Type: AWS::Cognito::UserPoolDomain 
+    DependsOn:
+    - CognitoUserPool
     Condition: HasNoDomainCertificate
     Properties:
-      UserPoolId: !Ref CognitoUserPool 
+      UserPoolId: !Ref CognitoUserPool
       Domain: !Ref Domain
 
   CognitoIdentityPool:
