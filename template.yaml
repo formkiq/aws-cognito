@@ -106,6 +106,7 @@ Conditions:
   HasReplyToEmailAddress: !Not [ !Equals [ !Ref ReplyToEmailAddress, "" ]]
   HasNoDomainCertificate: !Equals [ !Ref DomainCertificateArn, "" ]
   ApiDomainCertificateArn: !Not [ !Equals [ !Ref ApiDomainCertificateArn, "" ]]
+  HasNoApiDomainCertificateArn: !Equals [ !Ref ApiDomainCertificateArn, "" ]
 
 Resources:
 
@@ -130,7 +131,7 @@ Resources:
         info:
           title: !Sub "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.0.3"
+          version: "1.1.0"
         paths:
           /confirmRegistration:
             get:
@@ -485,6 +486,7 @@ Resources:
 
   HttpApiUrlParameter:
     Type: AWS::SSM::Parameter
+    Condition: HasNoApiDomainCertificateArn
     DependsOn:
     - HttpApi
     Properties:
@@ -492,6 +494,19 @@ Resources:
       Type: String      
       Name: !Sub "/formkiq/cognito/${Domain}/CognitoHttpApiUrl"
       Value: !GetAtt HttpApi.ApiEndpoint
+      Tags:
+        StackName: !Sub "${AWS::StackName}"
+
+  HttpApiUrlParameterCustomDomain:
+    Type: AWS::SSM::Parameter
+    Condition: ApiDomainCertificateArn
+    DependsOn:
+    - HttpApi
+    Properties:
+      Description: "The URL for the Cognito API endpoint"
+      Type: String      
+      Name: !Sub "/formkiq/cognito/${Domain}/CognitoHttpApiUrl"
+      Value: !Sub "https://${ApiDomain}"
       Tags:
         StackName: !Sub "${AWS::StackName}"
 
@@ -627,8 +642,25 @@ Resources:
         Variables:
           REDIRECT_URI: !Ref RedirectUrl
           DOMAIN: !Ref Domain
+          S3_BUCKET: !Ref CognitoConfig
       Tags:
         StackName: !Sub "${AWS::StackName}"
+
+  CognitoConfig:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: "StackName"
+          Value: !Sub "${AWS::StackName}"
 
   CognitoCustomMessagePermission:
     Type: AWS::Lambda::Permission
@@ -671,6 +703,11 @@ Resources:
             - ssm:GetParameters
             Resource: 
             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/formkiq/cognito/*"
+          - Effect: Allow
+            Action:
+            - s3:GetObject
+            Resource:
+            - !Sub "arn:aws:s3:::${CognitoConfig}/*"
 
   UserPoolDomainCustom: 
     Type: AWS::Cognito::UserPoolDomain 
@@ -737,8 +774,13 @@ Resources:
 
 Outputs:
   ApiEndpoint:
+    Condition: HasNoApiDomainCertificateArn
     Description: The Cognito Login API endpoint
     Value: !GetAtt HttpApi.ApiEndpoint
+  ApiEndpoint:
+    Condition: ApiDomainCertificateArn
+    Description: The Cognito Login API endpoint
+    Value: !Sub "https://${ApiDomain}"
   CognitoUserPoolId:
     Description: The Cognito User Pool Id
     Value: !Ref CognitoUserPool

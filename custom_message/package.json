@@ -10,7 +10,7 @@
     "axios": "^0.21.1"
   },
   "scripts": {
-    "test": "mocha tests/unit/ --timeout 10000"
+    "test": "nyc --reporter=html --reporter=text mocha tests/unit/ --timeout 10000"
   },
   "devDependencies": {
     "mocha": "^8.2.1",
