@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito
+Description: AWS Cognito 1.1.0
 
 Globals:
   Function:
@@ -776,11 +776,7 @@ Outputs:
   ApiEndpoint:
     Condition: HasNoApiDomainCertificateArn
     Description: The Cognito Login API endpoint
-    Value: !GetAtt HttpApi.ApiEndpoint
-  ApiEndpoint:
-    Condition: ApiDomainCertificateArn
-    Description: The Cognito Login API endpoint
-    Value: !Sub "https://${ApiDomain}"
+    Value: !If [ApiDomainCertificateArn, !Sub "https://${ApiDomain}", !GetAtt HttpApi.ApiEndpoint]
   CognitoUserPoolId:
     Description: The Cognito User Pool Id
     Value: !Ref CognitoUserPool
