@@ -59,10 +59,10 @@ function confirmRegistration(event) {
       userStatus = "NEW_PASSWORD_REQUIRED";
     }
     
-    return response(301, process.env.REDIRECT_URI + "?success=true&userStatus=" + userStatus + "&code=" + encodeURIComponent(code));
+    return response(301, process.env.REDIRECT_URI + "?success=true&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code));
   }).catch((error) => {
     console.log("ERROR: " + JSON.stringify(error));
-    return response(301, process.env.REDIRECT_URI + "?success=false&userStatus=" + userStatus + "&code=" + encodeURIComponent(code));
+    return response(301, process.env.REDIRECT_URI + "?success=false&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code));
   });
 }
 
@@ -80,10 +80,10 @@ function confirmSignUp(event) {
   };
   
   return COGNITO_CLIENT.confirmSignUp(params).promise().then((data) => {
-    return response(301, process.env.REDIRECT_URI + "?success=true&userStatus=" + userStatus);
+    return response(301, process.env.REDIRECT_URI + "?success=true&username=" + username + "&userStatus=" + userStatus);
   }).catch((error) => {
     console.log("ERROR: " + error);
-    return response(301, process.env.REDIRECT_URI + "?success=false&userStatus=" + userStatus);
+    return response(301, process.env.REDIRECT_URI + "?success=false&username=" + username + "&userStatus=" + userStatus);
   });
 }
 
