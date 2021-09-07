@@ -81,7 +81,7 @@ exports.lambdaHandler = async (event, context, callback) => {
                 
                 const userStatus = event.request.userAttributes['cognito:user_status'];
         
-                const link = `${process.env.REDIRECT_URI}/lostpassword?userStatus=${userStatus}&code=${codeParameter}&username=${userName}&clientId=${clientId}&region=${region}&email=${email}`;
+                const link = `${process.env.REDIRECT_URI}/change-password?userStatus=${userStatus}&code=${codeParameter}&username=${userName}&clientId=${clientId}&region=${region}&email=${email}`;
 
                 event.response.emailSubject = subject;
                 event.response.emailMessage = processMessage(event.request.userAttributes, message, link);
