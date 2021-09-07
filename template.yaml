@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.2.0
+Description: AWS Cognito 1.3.0
 
 Globals:
   Function:
@@ -131,7 +131,7 @@ Resources:
         info:
           title: !Sub "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.2.0"
+          version: "1.3.0"
         paths:
           /confirmRegistration:
             get:
@@ -153,6 +153,32 @@ Resources:
                   description: "301 response"
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"                
+          /respondToAuthChallenge:
+            post:
+              description: Cognito Respond To Auth Challenge
+              tags:
+              - Cognito
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/CognitoRespondToAuthChallenge'
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"            
           /resetPassword:
             post:
               description: Confirm User Lost Password Signup.
@@ -195,20 +221,6 @@ Resources:
                         type: "string"
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
-            options:
-              description: Cognito Login Options.
-              tags:
-              - Cognito     
-              responses:
-                "200":
-                  description: 200 response
-                  headers:
-                    Access-Control-Allow-Origin:
-                      schema:
-                        type: string
-                  content: {}
-              x-amazon-apigateway-integration:
-                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
           /refreshToken:
             post:
               description: Refresh Cognito Login
@@ -235,20 +247,6 @@ Resources:
                         type: "string"
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
-            options:
-              description: Cognito Login Options.
-              tags:
-              - Cognito     
-              responses:
-                "200":
-                  description: 200 response
-                  headers:
-                    Access-Control-Allow-Origin:
-                      schema:
-                        type: string
-                  content: {}
-              x-amazon-apigateway-integration:
-                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"                
           /register:
             post:
               description: Register Cognito User
@@ -273,20 +271,6 @@ Resources:
                     Access-Control-Allow-Headers:
                       schema:
                         type: "string"
-              x-amazon-apigateway-integration:
-                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
-            options:
-              description: Register Cognito User Options.
-              tags:
-              - Cognito     
-              responses:
-                "200":
-                  description: 200 response
-                  headers:
-                    Access-Control-Allow-Origin:
-                      schema:
-                        type: string
-                  content: {}
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
           /forgotPassword:
@@ -315,20 +299,6 @@ Resources:
                         type: "string"
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
-            options:
-              description: Lost Password Options.
-              tags:
-              - Cognito     
-              responses:
-                "200":
-                  description: 200 response
-                  headers:
-                    Access-Control-Allow-Origin:
-                      schema:
-                        type: string
-                  content: {}
-              x-amazon-apigateway-integration:
-                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
           /changePassword:
             post:
               description: Change Password
@@ -353,20 +323,6 @@ Resources:
                     Access-Control-Allow-Headers:
                       schema:
                         type: "string"
-              x-amazon-apigateway-integration:
-                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
-            options:
-              description: Change Password Options.
-              tags:
-              - Cognito     
-              responses:
-                "200":
-                  description: 200 response
-                  headers:
-                    Access-Control-Allow-Origin:
-                      schema:
-                        type: string
-                  content: {}
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
 
@@ -401,6 +357,22 @@ Resources:
                 username:
                   type: "string"
                 password:
+                  type: "string"
+            CognitoRespondToAuthChallenge:
+              required:
+              - "username"
+              - "password"
+              - "session"
+              - "userStatus"
+              type: "object"
+              properties:
+                username:
+                  type: "string"
+                password:
+                  type: "string"
+                session:
+                  type: "string"
+                userStatus:
                   type: "string"
             CognitoChangePassword:
               required:

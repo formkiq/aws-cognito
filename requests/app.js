@@ -32,6 +32,8 @@ exports.lambdaHandler = async (event, context) => {
         return resetPassword(obj);
       } else if (path == "/refreshToken") {
         return refreshToken(obj);
+      } else if (path == "/respondToAuthChallenge") {
+        return respondToAuthChallenge(obj);
       } else {
         return response(400, {message: "invalid request"});
       }
@@ -52,17 +54,19 @@ function confirmRegistration(event) {
   let code = event.queryStringParameters.code;
   let username = event.queryStringParameters.username;
   let userStatus = event.queryStringParameters.userStatus;
+  var session = "";
   
   return login({username: username, password: code}).then((data) => {
     var body = JSON.parse(data.body);
     if (body.ChallengeName == "NEW_PASSWORD_REQUIRED") {
       userStatus = "NEW_PASSWORD_REQUIRED";
+      session = body.Session;
     }
     
-    return response(301, process.env.REDIRECT_URI + "?success=true&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code));
+    return response(301, process.env.REDIRECT_URI + "?success=true&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code) + "&session=" + encodeURIComponent(session));
   }).catch((error) => {
     console.log("ERROR: " + JSON.stringify(error));
-    return response(301, process.env.REDIRECT_URI + "?success=false&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code));
+    return response(301, process.env.REDIRECT_URI + "?success=false&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code) + "&session=" + encodeURIComponent(session));
   });
 }
 
@@ -146,6 +150,32 @@ function handleRegister(obj) {
 
   } else {
     return response(400, {message: "missing fields 'username', 'password'"});
+  }
+}
+
+function respondToAuthChallenge(obj) {
+  let requiredFields = ["session", "password", "username", "userStatus"];
+
+  if (isValidFields(obj, requiredFields)) {
+
+    var params = {
+      ClientId: process.env.POOL_CLIENT_ID,
+      ChallengeName: obj.userStatus,
+      Session: decodeURIComponent(obj.session),
+      ChallengeResponses: {
+        NEW_PASSWORD: obj.password,
+        USERNAME: obj.username
+      }
+    };
+
+    return COGNITO_CLIENT.respondToAuthChallenge(params).promise().then((data) => {
+      return response(200, {message:"Change Password"});
+    }).catch((error) => {
+      return response(400, error);
+    });
+
+  } else {
+    return response(400, {message: "missing fields 'userStatus','session','password','username'"});
   }
 }
 
