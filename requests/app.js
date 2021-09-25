@@ -114,6 +114,7 @@ function handleRegister(obj) {
   if (isValidFields(obj, requiredFields)) {
 
     let createGroup = obj.createNewGroup != null;
+    let confirmSignUp = obj.confirmSignUp != null;
 
     var params = {
       ClientId: process.env.POOL_CLIENT_ID,
@@ -129,7 +130,7 @@ function handleRegister(obj) {
         UserPoolId: process.env.USER_POOL_ID
       };
 
-      return createGroup ? COGNITO_CLIENT.createGroup(params).promise().then((data) => {
+      return (createGroup ? COGNITO_CLIENT.createGroup(params).promise().then((data) => {
 
         var params = {
           GroupName: groupName,
@@ -137,11 +138,35 @@ function handleRegister(obj) {
           Username: obj.username
         };
 
-        return COGNITO_CLIENT.adminAddUserToGroup(params).promise().then(() => {
-          return response(200, {message:"User registered"});
-        });
+        return COGNITO_CLIENT.adminAddUserToGroup(params).promise();
 
-      }) : response(200, {message:"User registered"});
+      }) : Promise.resolve("")).then(() => {
+        
+        var params = {
+          UserPoolId: process.env.USER_POOL_ID,
+          Username: obj.username
+        };
+
+        return confirmSignUp ? COGNITO_CLIENT.adminConfirmSignUp(params).promise() : Promise.resolve("no confirmSignUp");
+
+      }).then(() => {
+
+        var params = {
+          UserAttributes: [
+            {
+              Name: 'email_verified',
+              Value: 'true'
+            }
+          ],
+          UserPoolId: process.env.USER_POOL_ID,
+          Username: obj.username
+        };
+
+        return confirmSignUp ? COGNITO_CLIENT.adminUpdateUserAttributes(params).promise() : Promise.resolve("no confirmSignUp");
+
+      }).then((data) => {
+        return response(200, {message:"User registered"});
+      });
 
     }).catch((error) => {
       console.log("ERROR: " + error);
