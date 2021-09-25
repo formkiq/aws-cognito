@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.3.1
+Description: AWS Cognito 1.3.2
 
 Globals:
   Function:
@@ -131,7 +131,7 @@ Resources:
         info:
           title: !Sub "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.3.1"
+          version: "1.3.2"
         paths:
           /confirmRegistration:
             get:
@@ -545,6 +545,8 @@ Resources:
               - cognito-idp:AdminCreateUser
               - cognito-idp:CreateGroup
               - cognito-idp:AdminAddUserToGroup
+              - cognito-idp:AdminConfirmSignUp
+              - cognito-idp:AdminUpdateUserAttributes
               Resource: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPool}'
 
   CognitoUserPool:

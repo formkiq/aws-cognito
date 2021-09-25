@@ -127,9 +127,11 @@ async function getParameter(event) {
 async function getS3Files(event) {
     var params = {
         Bucket: process.env.S3_BUCKET,
-        Key: "formkiq/cognito/" + process.env.DOMAIN + "/CustomMessage_AdminCreateUser/Message"
+        Key: "formkiq/cognito/" + process.env.DOMAIN + "/" + event.triggerSource + "/Message"
     };
-
+    
+    console.log("checking for s3 file: " + JSON.stringify(params));
+    
     var s3Stream = s3.getObject(params).createReadStream();
 
     return stream2buffer(s3Stream).then((buff) => {
