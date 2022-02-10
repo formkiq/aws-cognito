@@ -18,7 +18,13 @@ exports.lambdaHandler = async (event, context) => {
     
     if (path != null && event.body != null) {
       
-      let obj = JSON.parse(event.body);
+      var body = event.body;
+      if (event.isBase64Encoded) {
+        let buff = Buffer.from(body, 'base64');
+        body = buff.toString('utf-8');
+      }
+
+      let obj = JSON.parse(body);
       
       if (path == "/register") {
         return handleRegister(obj);
