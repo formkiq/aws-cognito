@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.3.4
+Description: AWS Cognito 1.4.0
 
 Globals:
   Function:
@@ -942,8 +942,8 @@ Outputs:
       Ref: Domain
   CognitoHostedUi:
     Description: Amazon Cognito Hosted UI Url
-      Value:
-        Fn::If: 
-        - HasDomainCertificate
-        - Ref: Domain
-        - Fn::Sub: "https://${Domain}.auth.${AWS::Region}.amazoncognito.com"
+    Value:
+      Fn::If: 
+      - HasDomainCertificate
+      - Ref: Domain
+      - Fn::Sub: "https://${Domain}.auth.${AWS::Region}.amazoncognito.com"
