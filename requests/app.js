@@ -1,4 +1,6 @@
 const AWS = require('aws-sdk');
+const https = require('https');
+const url = require('url');
 
 const COGNITO_CLIENT = new AWS.CognitoIdentityServiceProvider({
   apiVersion: "2016-04-19",
@@ -43,7 +45,8 @@ exports.lambdaHandler = async (event, context) => {
       } else {
         return response(400, {message: "invalid request"});
       }
-
+    } else if (path == "/login") {
+      return loginOAuth2(event);
     } else if (path != null && path == "/confirmSignUp") {
       return confirmSignUp(event);
     } else if (path != null && path == "/confirmRegistration") {
@@ -78,7 +81,6 @@ function confirmRegistration(event) {
 
 function confirmSignUp(event) {
   
-  let clientId = event.queryStringParameters.clientId;
   let code = event.queryStringParameters.code;
   let username = event.queryStringParameters.username;
   let userStatus = event.queryStringParameters.userStatus;
@@ -251,6 +253,61 @@ function forgotPassword(obj) {
   } else {
     return response(400, {message: "missing fields 'username'"});
   }
+}
+
+function loginOAuth2(event) {
+  let code = event.queryStringParameters.code;
+ 
+  let u = url.parse(process.env.COGNITO_DOMAIN);
+  let path = "/oauth2/token?grant_type=authorization_code&client_id=" + process.env.POOL_CLIENT_ID 
+    + "&code=" + code + "&redirect_uri=" + process.env.REDIRECT_URI;
+  
+  var opts = {
+      host: u.hostname,
+      path: path,
+      method: 'POST',
+      body: '',
+      headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+      }
+  };
+  
+  return new Promise((resolve, reject) => {
+    post(opts, resolve, reject);
+  }).then((data) => {
+    return response(200, data);
+  }).catch(() => {
+    return response(301, process.env.REDIRECT_URI + "?success=false");
+  });
+}
+
+function post(opts, resolve, reject) {
+  const req = https.request(opts, res => {
+    console.log("statusCode: " + res.statusCode);
+  
+    var body = '';
+  
+    res.on('data', chunk => {
+      body += chunk;
+    });
+  
+    res.on('end', () => {
+      console.log("BODY: " + body);
+  
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        resolve(body);
+      } else {
+        reject({statusCode: res.statusCode, body:body});
+      }
+    });
+  });
+
+  req.on('error', error => {
+    reject(error);
+  });
+
+  req.write(opts.body);
+  req.end();  
 }
 
 function login(obj) {
