@@ -101,27 +101,52 @@ Parameters:
     Default: 24
 
 Conditions:
-  HasDomainCertificate: !Not [ !Equals [ !Ref DomainCertificateArn, "" ]]
-  HasSesSourceArn: !Not [ !Equals [ !Ref SesSourceArn, "" ]]
-  HasReplyToEmailAddress: !Not [ !Equals [ !Ref ReplyToEmailAddress, "" ]]
-  HasNoDomainCertificate: !Equals [ !Ref DomainCertificateArn, "" ]
-  ApiDomainCertificateArn: !Not [ !Equals [ !Ref ApiDomainCertificateArn, "" ]]
-  HasNoApiDomainCertificateArn: !Equals [ !Ref ApiDomainCertificateArn, "" ]
+  HasDomainCertificate: 
+    Fn::Not:
+      - Fn::Equals:
+        - Ref: DomainCertificateArn
+        - ""
+  HasSesSourceArn: 
+    Fn::Not:
+      - Fn::Equals:
+        - Ref: SesSourceArn
+        - ""
+  HasReplyToEmailAddress: 
+    Fn::Not: 
+      - Fn::Equals: 
+        - Ref: ReplyToEmailAddress
+        - ""
+  HasNoDomainCertificate: 
+    Fn::Equals:
+      - Ref: DomainCertificateArn
+      - ""
+  ApiDomainCertificateArn: 
+    Fn::Not:
+      - Fn::Equals:
+        - Ref: ApiDomainCertificateArn
+        - ""
+  HasNoApiDomainCertificateArn: 
+    Fn::Equals:
+      - Ref: ApiDomainCertificateArn
+      - ""
 
 Resources:
 
   HttpApiStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
-      ApiId: !Ref HttpApi
+      ApiId: 
+        Ref: HttpApi
       AutoDeploy: true
-      Description: !Sub "${AWS::StackName}"
+      Description: 
+        Fn::Sub: "${AWS::StackName}"
       StageName: "$default"
       DefaultRouteSettings:
         ThrottlingBurstLimit: 200
         ThrottlingRateLimit: 100
       Tags:
-        StackName: !Sub "${AWS::StackName}" 
+        StackName: 
+          Fn::Sub: "${AWS::StackName}" 
 
   HttpApi:
     Type: AWS::ApiGatewayV2::Api
@@ -129,9 +154,10 @@ Resources:
       Body:
         openapi: "3.0.1"
         info:
-          title: !Sub "${AWS::StackName} Cognito API"
+          title: 
+            Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.3.4"
+          version: "1.4.0"
         paths:
           /confirmRegistration:
             get:
@@ -196,6 +222,27 @@ Resources:
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi301"                
           /login:
+            get:
+              description: OAuth2 Login
+              tags:
+              - Cognito
+              parameters:
+              - $ref: '#/components/parameters/codeParam'
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
             post:
               description: Cognito Login
               tags:
@@ -340,6 +387,14 @@ Resources:
             Location:
               schema:
                 type: string
+          parameters:
+            codeParam:
+              name: code
+              in: query
+              description: OAuth2 Code
+              required: true
+              schema:
+                type: string
           schemas:
             RefreshToken:
               required:
@@ -464,10 +519,15 @@ Resources:
     Properties:
       Description: "The URL for the Cognito API endpoint"
       Type: String      
-      Name: !Sub "/formkiq/cognito/${Domain}/CognitoHttpApiUrl"
-      Value: !GetAtt HttpApi.ApiEndpoint
+      Name: 
+        Fn::Sub: "/formkiq/cognito/${Domain}/CognitoHttpApiUrl"
+      Value: 
+        Fn::GetAtt: 
+          - HttpApi
+          - ApiEndpoint
       Tags:
-        StackName: !Sub "${AWS::StackName}"
+        StackName: 
+          Fn::Sub: "${AWS::StackName}"
 
   HttpApiUrlParameterCustomDomain:
     Type: AWS::SSM::Parameter
@@ -477,10 +537,13 @@ Resources:
     Properties:
       Description: "The URL for the Cognito API endpoint"
       Type: String      
-      Name: !Sub "/formkiq/cognito/${Domain}/CognitoHttpApiUrl"
-      Value: !Sub "https://${ApiDomain}"
+      Name: 
+        Fn::Sub: "/formkiq/cognito/${Domain}/CognitoHttpApiUrl"
+      Value: 
+        Fn::Sub: "https://${ApiDomain}"
       Tags:
-        StackName: !Sub "${AWS::StackName}"
+        StackName: 
+          Fn::Sub: "${AWS::StackName}"
 
   CognitoRequests:
     Type: AWS::Serverless::Function
@@ -492,15 +555,28 @@ Resources:
       Runtime: nodejs14.x
       MemorySize: 256
       Timeout: 25
-      Role: !GetAtt [CognitoRequestsRole, Arn]
+      Role: 
+        Fn::GetAtt: 
+          - CognitoRequestsRole
+          - Arn
       Environment:
         Variables:
-          REGION: !Sub "${AWS::Region}"
-          USER_POOL_ID: !Ref CognitoUserPool
-          POOL_CLIENT_ID: !Ref CognitoUserPoolClient
-          REDIRECT_URI: !Ref RedirectUrl
+          REGION: 
+            Fn::Sub: "${AWS::Region}"
+          USER_POOL_ID: 
+            Ref: CognitoUserPool
+          POOL_CLIENT_ID: 
+            Ref: CognitoUserPoolClient
+          REDIRECT_URI: 
+            Ref: RedirectUrl
+          COGNITO_DOMAIN:
+            Fn::If: 
+            - HasDomainCertificate
+            - Ref: Domain
+            - Fn::Sub: "https://${Domain}.auth.${AWS::Region}.amazoncognito.com"
       Tags:
-        StackName: !Sub "${AWS::StackName}"
+        StackName: 
+          Fn::Sub: "${AWS::StackName}"
 
   CognitoRequestsApiInvokePermission:
     Type: "AWS::Lambda::Permission"
@@ -509,7 +585,8 @@ Resources:
     - CognitoRequests
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref CognitoRequests
+      FunctionName: 
+        Ref: CognitoRequests
       Principal: apigateway.amazonaws.com
 
   CognitoRequestsRole:
@@ -517,7 +594,8 @@ Resources:
     Properties:
       Tags:
         - Key: "StackName"
-          Value: !Sub "${AWS::StackName}"
+          Value: 
+            Fn::Sub: "${AWS::StackName}"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -547,7 +625,8 @@ Resources:
               - cognito-idp:AdminAddUserToGroup
               - cognito-idp:AdminConfirmSignUp
               - cognito-idp:AdminUpdateUserAttributes
-              Resource: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPool}'
+              Resource: 
+                Fn::Sub: 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPool}'
 
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
@@ -558,12 +637,29 @@ Resources:
         RecoveryMechanisms:
           - Name: verified_email
             Priority: 1
-      UserPoolName: !Ref UserPoolName
+      UserPoolName: 
+        Ref: UserPoolName
       EmailConfiguration:
-        EmailSendingAccount: !If [HasSesSourceArn, DEVELOPER, COGNITO_DEFAULT]
-        From: !If [HasReplyToEmailAddress, !Ref ReplyToEmailAddress, !Ref AWS::NoValue]
-        SourceArn: !If [HasSesSourceArn, !Ref SesSourceArn, !Ref AWS::NoValue]
-        ReplyToEmailAddress: !If [HasReplyToEmailAddress, !Ref ReplyToEmailAddress, !Ref AWS::NoValue]
+        EmailSendingAccount: 
+          Fn::If: 
+            - HasSesSourceArn
+            - DEVELOPER
+            - COGNITO_DEFAULT
+        From: 
+          Fn::If: 
+          - HasReplyToEmailAddress
+          - Ref: ReplyToEmailAddress
+          - Ref: AWS::NoValue
+        SourceArn: 
+          Fn::If:
+          - HasSesSourceArn
+          - Ref: SesSourceArn
+          - Ref: AWS::NoValue
+        ReplyToEmailAddress: 
+          Fn::If: 
+          - HasReplyToEmailAddress
+          - Ref: ReplyToEmailAddress
+          - Ref: AWS::NoValue
       VerificationMessageTemplate:
         DefaultEmailOption: CONFIRM_WITH_CODE
       UsernameAttributes:
@@ -574,31 +670,44 @@ Resources:
       UsernameConfiguration:
         CaseSensitive: false
       AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: !Sub "${AllowAdminCreateUserOnly}"
+        AllowAdminCreateUserOnly: 
+          Fn::Sub: "${AllowAdminCreateUserOnly}"
       LambdaConfig:
-        CustomMessage: !GetAtt CognitoCustomMessage.Arn        
+        CustomMessage: 
+          Fn::GetAtt: 
+            - CognitoCustomMessage
+            - Arn        
       Policies:
         PasswordPolicy:
-          MinimumLength: !Sub "${PasswordMinimumLength}"
-          RequireLowercase: !Sub "${PasswordRequireLowercase}"
-          RequireNumbers: !Sub "${PasswordRequireNumbers}"
-          RequireSymbols: !Sub "${PasswordRequireSymbols}"
-          RequireUppercase: !Sub "${PasswordRequireUppercase}"
+          MinimumLength: 
+            Fn::Sub: "${PasswordMinimumLength}"
+          RequireLowercase: 
+            Fn::Sub: "${PasswordRequireLowercase}"
+          RequireNumbers: 
+            Fn::Sub: "${PasswordRequireNumbers}"
+          RequireSymbols: 
+            Fn::Sub: "${PasswordRequireSymbols}"
+          RequireUppercase: 
+            Fn::Sub: "${PasswordRequireUppercase}"
       Schema:
         - Name: email
           AttributeDataType: String
           Mutable: false
           Required: true
       UserPoolTags:
-        StackName: !Sub "${AWS::StackName}"
+        StackName: 
+          Fn::Sub: "${AWS::StackName}"
 
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: 
+        Ref: CognitoUserPool
       PreventUserExistenceErrors: ENABLED
-      AccessTokenValidity: !Ref AccessTokenValidity
-      IdTokenValidity: !Ref IdTokenValidity
+      AccessTokenValidity: 
+        Ref: AccessTokenValidity
+      IdTokenValidity: 
+        Ref: IdTokenValidity
       ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
@@ -611,14 +720,21 @@ Resources:
       CodeUri: custom_message/
       Handler: app.lambdaHandler
       Runtime: nodejs14.x
-      Role: !GetAtt CognitoCustomMessageRole.Arn
+      Role: 
+        Fn::GetAtt: 
+          - CognitoCustomMessageRole
+          - Arn
       Environment:
         Variables:
-          REDIRECT_URI: !Ref RedirectUrl
-          DOMAIN: !Ref Domain
-          S3_BUCKET: !Ref CognitoConfig
+          REDIRECT_URI: 
+            Ref: RedirectUrl
+          DOMAIN: 
+            Ref: Domain
+          S3_BUCKET: 
+            Ref: CognitoConfig
       Tags:
-        StackName: !Sub "${AWS::StackName}"
+        StackName: 
+          Fn::Sub: "${AWS::StackName}"
 
   CognitoConfig:
     Type: AWS::S3::Bucket
@@ -634,7 +750,8 @@ Resources:
         RestrictPublicBuckets: true
       Tags:
         - Key: "StackName"
-          Value: !Sub "${AWS::StackName}"
+          Value: 
+            Fn::Sub: "${AWS::StackName}"
 
   CognitoCustomMessagePermission:
     Type: AWS::Lambda::Permission
@@ -643,16 +760,21 @@ Resources:
     - CognitoUserPool
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref CognitoCustomMessage
+      FunctionName: 
+        Ref: CognitoCustomMessage
       Principal: cognito-idp.amazonaws.com
-      SourceArn: !GetAtt CognitoUserPool.Arn
+      SourceArn: 
+        Fn::GetAtt: 
+          - CognitoUserPool
+          - Arn
 
   CognitoCustomMessageRole:
     Type: AWS::IAM::Role
     Properties:
       Tags:
         - Key: "StackName"
-          Value: !Sub "${AWS::StackName}"
+          Value: 
+            Fn::Sub: "${AWS::StackName}"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -664,7 +786,8 @@ Resources:
           - sts:AssumeRole
       Path: "/"
       Policies:
-      - PolicyName: !Sub "${AWS::StackName}-CognitoCustomMessageRole"
+      - PolicyName: 
+          Fn::Sub: "${AWS::StackName}-CognitoCustomMessageRole"
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -676,12 +799,12 @@ Resources:
             Action:
             - ssm:GetParameters
             Resource: 
-            - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/formkiq/cognito/*"
+            - Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/formkiq/cognito/*"
           - Effect: Allow
             Action:
             - s3:GetObject
             Resource:
-            - !Sub "arn:aws:s3:::${CognitoConfig}/*"
+            - Fn::Sub: "arn:aws:s3:::${CognitoConfig}/*"
 
   UserPoolDomainCustom: 
     Type: AWS::Cognito::UserPoolDomain 
@@ -689,10 +812,13 @@ Resources:
     - CognitoUserPool
     Condition: HasDomainCertificate
     Properties:
-      UserPoolId: !Ref CognitoUserPool 
-      Domain: !Ref Domain
+      UserPoolId: 
+        Ref: CognitoUserPool 
+      Domain: 
+        Ref: Domain
       CustomDomainConfig:
-        CertificateArn: !Ref DomainCertificateArn
+        CertificateArn: 
+          Ref: DomainCertificateArn
 
   UserPoolDomain: 
     Type: AWS::Cognito::UserPoolDomain 
@@ -700,28 +826,38 @@ Resources:
     - CognitoUserPool
     Condition: HasNoDomainCertificate
     Properties:
-      UserPoolId: !Ref CognitoUserPool
-      Domain: !Ref Domain
+      UserPoolId: 
+        Ref: CognitoUserPool
+      Domain: 
+        Ref: Domain
 
   CognitoIdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
-      IdentityPoolName: !Sub "${AWS::StackName}-identity-pool"
+      IdentityPoolName: 
+        Fn::Sub: "${AWS::StackName}-identity-pool"
       CognitoIdentityProviders: 
         -
-          ClientId: !Ref CognitoUserPoolClient
-          ProviderName: !GetAtt CognitoUserPool.ProviderName
+          ClientId: 
+            Ref: CognitoUserPoolClient
+          ProviderName: 
+            Fn::GetAtt: 
+              - CognitoUserPool
+              - ProviderName
       AllowUnauthenticatedIdentities: false
 
   ApiDomainName:
     Type: AWS::ApiGatewayV2::DomainName
     Condition: ApiDomainCertificateArn
     Properties: 
-      DomainName: !Ref ApiDomain
+      DomainName: 
+        Ref: ApiDomain
       DomainNameConfigurations:
-      - CertificateArn: !Ref ApiDomainCertificateArn
+      - CertificateArn: 
+          Ref: ApiDomainCertificateArn
       Tags:
-        StackName: !Sub "${AWS::StackName}"
+        StackName: 
+          Fn::Sub: "${AWS::StackName}"
 
   ApiDomainMapping:
     Type: AWS::ApiGatewayV2::ApiMapping
@@ -731,46 +867,83 @@ Resources:
     - HttpApi
     - ApiRoute53
     Properties:
-      ApiId: !Ref HttpApi
-      DomainName: !Ref ApiDomain
+      ApiId: 
+        Ref: HttpApi
+      DomainName: 
+        Ref: ApiDomain
       Stage: "$default"
 
   ApiRoute53:
     Type: AWS::Route53::RecordSet
     Condition: ApiDomainCertificateArn
     Properties:
-      Name: !Ref ApiDomain
-      HostedZoneName: !Ref HostedZone
+      Name: 
+        Ref: ApiDomain
+      HostedZoneName: 
+        Ref: HostedZone
       Type: A
       AliasTarget:
-        HostedZoneId: !GetAtt ApiDomainName.RegionalHostedZoneId
-        DNSName: !GetAtt ApiDomainName.RegionalDomainName
+        HostedZoneId: 
+          Fn::GetAtt: 
+            - ApiDomainName
+            - RegionalHostedZoneId
+        DNSName: 
+          Fn::GetAtt: 
+            - ApiDomainName
+            - RegionalDomainName
 
 Outputs:
   ApiEndpoint:
     Description: The Cognito Login API endpoint
-    Value: !If [ApiDomainCertificateArn, !Sub "https://${ApiDomain}", !GetAtt HttpApi.ApiEndpoint]
+    Value: 
+      Fn::If: 
+        - ApiDomainCertificateArn
+        - Fn::Sub: "https://${ApiDomain}"
+        - Fn::GetAtt: 
+            - HttpApi
+            - ApiEndpoint
   CognitoConfigBucket:
     Description: The Cognito Config Bucket
-    Value: !Ref CognitoConfig
+    Value: 
+      Ref: CognitoConfig
   CognitoUserPoolId:
     Description: The Cognito User Pool Id
-    Value: !Ref CognitoUserPool
+    Value: 
+      Ref: CognitoUserPool
   CognitoUserPoolProviderName:
     Description: The Cognito User Pool Provider Name
-    Value: !GetAtt CognitoUserPool.ProviderName
+    Value: 
+      Fn::GetAtt: 
+        - CognitoUserPool
+        - ProviderName
   CognitoUserPoolProviderURL:
     Description: The Cognito User Pool Provider URL
-    Value: !GetAtt CognitoUserPool.ProviderURL
+    Value: 
+      Fn::GetAtt: 
+        - CognitoUserPool
+        - ProviderURL
   CognitoUserPoolArn:
     Description: The Cognito User Pool Arn
-    Value: !GetAtt CognitoUserPool.Arn
+    Value: 
+      Fn::GetAtt: 
+        - CognitoUserPool
+        - Arn
   CognitoUserPoolClientId:
     Description: The Cognito User Pool Client Id
-    Value: !Ref CognitoUserPoolClient
+    Value: 
+      Ref: CognitoUserPoolClient
   CognitoIdentityPoolId:
     Description: Cognito Identity Pool
-    Value: !Ref CognitoIdentityPool
+    Value: 
+      Ref: CognitoIdentityPool
   Domain:
     Description: Amazon Cognito domain to use (include full domain if CertificateArn used)
-    Value: !Ref Domain
+    Value: 
+      Ref: Domain
+  CognitoHostedUi:
+    Description: Amazon Cognito Hosted UI Url
+      Value:
+        Fn::If: 
+        - HasDomainCertificate
+        - Ref: Domain
+        - Fn::Sub: "https://${Domain}.auth.${AWS::Region}.amazoncognito.com"
