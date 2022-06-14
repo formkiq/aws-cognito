@@ -31,7 +31,7 @@ exports.lambdaHandler = async (event, context) => {
       if (path == "/register") {
         return handleRegister(obj);
       } else if (path == "/login") {
-        return login(obj);
+        return login(event, obj);
       } else if (path == "/changePassword") {
         return changepassword(obj);
       } else if (path == "/forgotPassword") {
@@ -45,8 +45,6 @@ exports.lambdaHandler = async (event, context) => {
       } else {
         return response(400, {message: "invalid request"});
       }
-    } else if (path == "/login") {
-      return loginOAuth2(event);
     } else if (path != null && path == "/confirmSignUp") {
       return confirmSignUp(event);
     } else if (path != null && path == "/confirmRegistration") {
@@ -255,9 +253,8 @@ function forgotPassword(obj) {
   }
 }
 
-function loginOAuth2(event) {
-  let code = event.queryStringParameters.code;
- 
+function loginOAuth2(code) {
+
   let u = url.parse(process.env.COGNITO_DOMAIN);
   let path = "/oauth2/token?grant_type=authorization_code&client_id=" + process.env.POOL_CLIENT_ID 
     + "&code=" + code + "&redirect_uri=" + process.env.REDIRECT_URI;
@@ -273,15 +270,43 @@ function loginOAuth2(event) {
   };
   
   return new Promise((resolve, reject) => {
-    post(opts, resolve, reject);
+    send(opts, resolve, reject);
   }).then((data) => {
-    return response(200, data);
+  
+    let obj = JSON.parse(data);
+    let o = {
+      AuthenticationResult : {
+        AccessToken : obj['access_token'],
+        IdToken : obj['id_token'],
+        RefreshToken : obj['refresh_token']
+      }
+    };
+
+    var opts2 = {
+      host: u.hostname,
+      path: '/oauth2/userInfo',
+      method: 'GET',
+      body: '',
+      headers: {
+        'Authorization': 'Bearer ' + obj['access_token']
+      }
+    };
+  
+    return new Promise((resolve, reject) => {
+      send(opts2, resolve, reject);
+    }).then((data) => {
+      let user = JSON.parse(data);
+      o.AuthenticationResult.username = user.username;
+      o.AuthenticationResult.email = user.email;
+      return response(200, o);
+    });
+    
   }).catch(() => {
     return response(301, process.env.REDIRECT_URI + "?success=false");
   });
 }
 
-function post(opts, resolve, reject) {
+function send(opts, resolve, reject) {
   const req = https.request(opts, res => {
     console.log("statusCode: " + res.statusCode);
   
@@ -310,7 +335,8 @@ function post(opts, resolve, reject) {
   req.end();  
 }
 
-function login(obj) {
+function login(event, obj) {
+  
   let requiredFields = ["username", "password"];
 
   if (isValidFields(obj, requiredFields)) {
@@ -330,6 +356,8 @@ function login(obj) {
       return response(400, error);
     });
 
+  } else if (obj.code) {
+      return loginOAuth2(obj.code);
   } else {
     return response(400, {message: "missing fields 'username'"});
   }
