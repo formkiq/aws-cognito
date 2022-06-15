@@ -708,6 +708,9 @@ Resources:
         Ref: AccessTokenValidity
       IdTokenValidity: 
         Ref: IdTokenValidity
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
       ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
