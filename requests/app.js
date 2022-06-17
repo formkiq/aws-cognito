@@ -31,7 +31,7 @@ exports.lambdaHandler = async (event, context) => {
       if (path == "/register") {
         return handleRegister(obj);
       } else if (path == "/login") {
-        return login(event, obj);
+        return login(obj);
       } else if (path == "/changePassword") {
         return changepassword(obj);
       } else if (path == "/forgotPassword") {
@@ -335,10 +335,9 @@ function send(opts, resolve, reject) {
   req.end();  
 }
 
-function login(event, obj) {
+function login(obj) {
   
   let requiredFields = ["username", "password"];
-
   if (isValidFields(obj, requiredFields)) {
 
     var params = {
