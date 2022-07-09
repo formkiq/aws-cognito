@@ -41,4 +41,4 @@ jobs:
         env:
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
         run: |
-          aws s3 cp ./b/build/aws-cognito-*.zip s3://${S3_BUCKET}/aws-cognito/
+          aws s3 cp ./build/aws-cognito-*.zip s3://${S3_BUCKET}/aws-cognito/
