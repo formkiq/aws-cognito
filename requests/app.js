@@ -232,20 +232,48 @@ function changepassword(obj) {
   }
 }
 
+function getUser(username) {
+  var params = {
+    UserPoolId: process.env.USER_POOL_ID,
+    Username: username
+  };
+  return COGNITO_CLIENT.adminGetUser(params).promise();
+}
+
+function fixForcePasswordChange(username) {
+  return getUser(username).then((user) => {
+    if ("FORCE_CHANGE_PASSWORD" === user.UserStatus) {
+      var password = randomString(16, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+      var params = {
+        Password: password,
+        UserPoolId: process.env.USER_POOL_ID,
+        Username: username,
+        Permanent: true
+      };
+      return COGNITO_CLIENT.adminSetUserPassword(params).promise();
+    } else {
+      return Promise.resolve("");
+    }
+  });
+}
+
 function forgotPassword(obj) {
   let requiredFields = ["username"];
 
   if (isValidFields(obj, requiredFields)) {
 
-    var params = {
-      ClientId: process.env.POOL_CLIENT_ID,
-      Username: obj.username
-    };
-
-    return COGNITO_CLIENT.forgotPassword(params).promise().then((data) => {
-      return response(200, {message:"Password reset sent"});
-    }).catch((error) => {
-      return response(400, error);
+    return fixForcePasswordChange(obj.username).then(() => {
+      
+      var params = {
+        ClientId: process.env.POOL_CLIENT_ID,
+        Username: obj.username
+      };
+  
+      return COGNITO_CLIENT.forgotPassword(params).promise().then((data) => {
+        return response(200, {message:"Password reset sent"});
+      }).catch((error) => {
+        return response(400, error);
+      });
     });
 
   } else {

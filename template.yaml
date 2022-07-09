@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.4.0
+Description: AWS Cognito 1.4.1
 
 Globals:
   Function:
@@ -134,6 +134,8 @@ Resources:
 
   HttpApiStage:
     Type: AWS::ApiGatewayV2::Stage
+    DependsOn:
+      - HttpApi
     Properties:
       ApiId: 
         Ref: HttpApi
@@ -599,6 +601,8 @@ Resources:
               Resource: "*"
             - Effect: Allow
               Action:
+              - cognito-idp:AdminSetUserPassword
+              - cognito-idp:AdminGetUser
               - cognito-idp:AdminCreateUser
               - cognito-idp:CreateGroup
               - cognito-idp:AdminAddUserToGroup
