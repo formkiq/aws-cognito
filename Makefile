@@ -2,6 +2,7 @@ VERSION := $(shell node -p "require('./package.json').version")
 
 build : clean
 	npm i
+	npm test
 	sam build
 	mkdir build
 	cd .aws-sam/build && zip -r ../../build/aws-cognito-v${VERSION}.zip *

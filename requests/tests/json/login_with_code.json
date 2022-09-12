@@ -1,0 +1,149 @@
+{
+  "version": "1.0",
+  "resource": "/login",
+  "path": "/login",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Length": "55",
+    "Content-Type": "application/json; charset=utf-8",
+    "Host": "b4ye29xsg9.execute-api.us-east-2.amazonaws.com",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:104.0) Gecko/20100101 Firefox/104.0",
+    "X-Amzn-Trace-Id": "Root=1-631f5d20-1d2ea38a32ee996758477975",
+    "X-Forwarded-For": "50.71.0.58",
+    "X-Forwarded-Port": "443",
+    "X-Forwarded-Proto": "https",
+    "accept": "application/json, text/plain, */*",
+    "accept-encoding": "gzip, deflate, br",
+    "accept-language": "en-US,en;q=0.5",
+    "cache-control": "no-cache",
+    "dnt": "1",
+    "origin": "https://d2i952jamiey58.cloudfront.net",
+    "pragma": "no-cache",
+    "referer": "https://d2i952jamiey58.cloudfront.net/",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "cross-site"
+  },
+  "multiValueHeaders": {
+    "Content-Length": [
+      "55"
+    ],
+    "Content-Type": [
+      "application/json; charset=utf-8"
+    ],
+    "Host": [
+      "b4ye29xsg9.execute-api.us-east-2.amazonaws.com"
+    ],
+    "User-Agent": [
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:104.0) Gecko/20100101 Firefox/104.0"
+    ],
+    "X-Amzn-Trace-Id": [
+      "Root=1-631f5d20-1d2ea38a32ee996758477975"
+    ],
+    "X-Forwarded-For": [
+      "50.71.0.58"
+    ],
+    "X-Forwarded-Port": [
+      "443"
+    ],
+    "X-Forwarded-Proto": [
+      "https"
+    ],
+    "accept": [
+      "application/json, text/plain, */*"
+    ],
+    "accept-encoding": [
+      "gzip, deflate, br"
+    ],
+    "accept-language": [
+      "en-US,en;q=0.5"
+    ],
+    "cache-control": [
+      "no-cache"
+    ],
+    "dnt": [
+      "1"
+    ],
+    "origin": [
+      "https://d2i952jamiey58.cloudfront.net"
+    ],
+    "pragma": [
+      "no-cache"
+    ],
+    "referer": [
+      "https://d2i952jamiey58.cloudfront.net/"
+    ],
+    "sec-fetch-dest": [
+      "empty"
+    ],
+    "sec-fetch-mode": [
+      "cors"
+    ],
+    "sec-fetch-site": [
+      "cross-site"
+    ]
+  },
+  "queryStringParameters": {
+    "clientId": "CLIENT_ID_NOT_APPLICABLE",
+    "code": "vLcYe,Mj",
+    "email": "test@formkiq.com",
+    "region": "us-east-2",
+    "userStatus": "FORCE_CHANGE_PASSWORD",
+    "username": "fbdd8fde-367b-4cc1-835a-8109488b7064"
+  },
+  "multiValueQueryStringParameters": {
+    "clientId": [
+      "CLIENT_ID_NOT_APPLICABLE"
+    ],
+    "code": [
+      "vLcYe,Mj"
+    ],
+    "email": [
+      "test@formkiq.com"
+    ],
+    "region": [
+      "us-east-2"
+    ],
+    "userStatus": [
+      "FORCE_CHANGE_PASSWORD"
+    ],
+    "username": [
+      "fbdd8fde-367b-4cc1-835a-8109488b7064"
+    ]
+  },
+  "requestContext": {
+    "accountId": "622653865277",
+    "apiId": "b4ye29xsg9",
+    "domainName": "b4ye29xsg9.execute-api.us-east-2.amazonaws.com",
+    "domainPrefix": "b4ye29xsg9",
+    "extendedRequestId": "YWt9Dg8UCYcEMgQ=",
+    "httpMethod": "POST",
+    "identity": {
+      "accessKey": null,
+      "accountId": null,
+      "caller": null,
+      "cognitoAmr": null,
+      "cognitoAuthenticationProvider": null,
+      "cognitoAuthenticationType": null,
+      "cognitoIdentityId": null,
+      "cognitoIdentityPoolId": null,
+      "principalOrgId": null,
+      "sourceIp": "50.71.0.58",
+      "user": null,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:104.0) Gecko/20100101 Firefox/104.0",
+      "userArn": null
+    },
+    "path": "/login",
+    "protocol": "HTTP/1.1",
+    "requestId": "YWt9Dg8UCYcEMgQ=",
+    "requestTime": "12/Sep/2022:16:24:00 +0000",
+    "requestTimeEpoch": 1662999840187,
+    "resourceId": "POST /login",
+    "resourcePath": "/login",
+    "stage": "$default"
+  },
+  "pathParameters": null,
+  "stageVariables": null,
+  "body": "{\"code\":\"12356\"}",
+  "isBase64Encoded": false
+}
