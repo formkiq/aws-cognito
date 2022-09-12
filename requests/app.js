@@ -17,6 +17,7 @@ exports.lambdaHandler = async (event, context) => {
     console.info(JSON.stringify(event));
     
     let path = event.path;
+    let redirectUri = getRedirectUri(event);
     
     if (path != null && event.body != null) {
       
@@ -31,7 +32,7 @@ exports.lambdaHandler = async (event, context) => {
       if (path == "/register") {
         return handleRegister(obj);
       } else if (path == "/login") {
-        return login(obj);
+        return login(obj, redirectUri);
       } else if (path == "/changePassword") {
         return changepassword(obj);
       } else if (path == "/forgotPassword") {
@@ -46,9 +47,9 @@ exports.lambdaHandler = async (event, context) => {
         return response(400, {message: "invalid request"});
       }
     } else if (path != null && path == "/confirmSignUp") {
-      return confirmSignUp(event);
+      return confirmSignUp(event, redirectUri);
     } else if (path != null && path == "/confirmRegistration") {
-      return confirmRegistration(event);
+      return confirmRegistration(event, redirectUri);
     } else if (event.httpMethod == "OPTIONS") {
       return response(200, {message: "it's all good"});
     } else {
@@ -56,28 +57,28 @@ exports.lambdaHandler = async (event, context) => {
     }
 };
 
-function confirmRegistration(event) {
+function confirmRegistration(event, redirectUri) {
   
   let code = event.queryStringParameters.code;
   let username = event.queryStringParameters.username;
   let userStatus = event.queryStringParameters.userStatus;
   var session = "";
   
-  return login({username: username, password: code}).then((data) => {
+  return login({username: username, password: code}, redirectUri).then((data) => {
     var body = JSON.parse(data.body);
     if (body.ChallengeName == "NEW_PASSWORD_REQUIRED") {
       userStatus = "NEW_PASSWORD_REQUIRED";
       session = body.Session;
     }
     
-    return response(301, process.env.REDIRECT_URI + "?success=true&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code) + "&session=" + encodeURIComponent(session));
+    return response(301, redirectUri + "?success=true&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code) + "&session=" + encodeURIComponent(session));
   }).catch((error) => {
     console.log("ERROR: " + JSON.stringify(error));
-    return response(301, process.env.REDIRECT_URI + "?success=false&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code) + "&session=" + encodeURIComponent(session));
+    return response(301, redirectUri + "?success=false&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code) + "&session=" + encodeURIComponent(session));
   });
 }
 
-function confirmSignUp(event) {
+function confirmSignUp(event, redirectUri) {
   
   let code = event.queryStringParameters.code;
   let username = event.queryStringParameters.username;
@@ -90,10 +91,10 @@ function confirmSignUp(event) {
   };
   
   return COGNITO_CLIENT.confirmSignUp(params).promise().then((data) => {
-    return response(301, process.env.REDIRECT_URI + "?success=true&username=" + username + "&userStatus=" + userStatus);
+    return response(301, redirectUri + "?success=true&username=" + username + "&userStatus=" + userStatus);
   }).catch((error) => {
     console.log("ERROR: " + error);
-    return response(301, process.env.REDIRECT_URI + "?success=false&username=" + username + "&userStatus=" + userStatus);
+    return response(301, redirectUri + "?success=false&username=" + username + "&userStatus=" + userStatus);
   });
 }
 
@@ -281,11 +282,11 @@ function forgotPassword(obj) {
   }
 }
 
-function loginOAuth2(code) {
+function loginOAuth2(code, redirectUri) {
 
   let u = url.parse(process.env.COGNITO_DOMAIN);
   let path = "/oauth2/token?grant_type=authorization_code&client_id=" + process.env.POOL_CLIENT_ID 
-    + "&code=" + code + "&redirect_uri=" + process.env.REDIRECT_URI;
+    + "&code=" + code + "&redirect_uri=" + redirectUri;
   
   var opts = {
       host: u.hostname,
@@ -330,7 +331,7 @@ function loginOAuth2(code) {
     });
     
   }).catch(() => {
-    return response(301, process.env.REDIRECT_URI + "?success=false");
+    return response(301, redirectUri + "?success=false");
   });
 }
 
@@ -363,7 +364,7 @@ function send(opts, resolve, reject) {
   req.end();  
 }
 
-function login(obj) {
+function login(obj, redirectUri) {
   
   let requiredFields = ["username", "password"];
   if (isValidFields(obj, requiredFields)) {
@@ -384,7 +385,7 @@ function login(obj) {
     });
 
   } else if (obj.code) {
-      return loginOAuth2(obj.code);
+      return loginOAuth2(obj.code, redirectUri);
   } else {
     return response(400, {message: "missing fields 'username'"});
   }
@@ -448,4 +449,21 @@ function randomString(length, chars) {
     var result = '';
     for (var i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
     return result;
+}
+
+function getRedirectUri(event) {
+  
+  var validHosts = process.env.REDIRECT_URI.split(",");
+  var uri = validHosts[0];
+
+  if (event.queryStringParameters != null && event.queryStringParameters["redirect_uri"] != null) {
+    let newRedirect = decodeURIComponent(event.queryStringParameters["redirect_uri"]);
+
+    const found = validHosts.find(element => newRedirect.startsWith(element));
+    if (found) {
+      uri = newRedirect;
+    }
+  }
+
+  return uri;
 }
