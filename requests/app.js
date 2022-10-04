@@ -307,7 +307,8 @@ function loginOAuth2(code, redirectUri) {
       AuthenticationResult : {
         AccessToken : obj['access_token'],
         IdToken : obj['id_token'],
-        RefreshToken : obj['refresh_token']
+        RefreshToken : obj['refresh_token'],
+        ExpiresIn: obj['expires_in']
       }
     };
 
