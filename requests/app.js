@@ -275,6 +275,13 @@ function forgotPassword(obj) {
       }).catch((error) => {
         return response(400, error);
       });
+
+    }).catch((error) => {
+      if (error.code === "UserNotFoundException") {
+        return response(200, {message:"Password reset sent"});
+      } else {
+        return response(400, error);
+      }
     });
 
   } else {
@@ -418,19 +425,23 @@ function refreshToken(obj) {
 
 function response(statusCode, message) {
 
+  var resp = {};
   if (statusCode == 301) {
-    return {
+    resp = {
       'statusCode': statusCode,
       headers: {
         Location: message,
       }
     };
   } else {
-    return {
+    resp = {
       'statusCode': statusCode,
       'body': JSON.stringify(message)
     };
   }
+  
+  console.log(JSON.stringify(resp));
+  return resp;
 }
 
 function isValidFields(obj, requiredFields) {
