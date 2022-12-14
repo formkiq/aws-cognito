@@ -1,6 +1,6 @@
 {
   "name": "aws-cognito",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "AWS Cognito API",
   "scripts": {
     "build": "sam build ; gulp",
