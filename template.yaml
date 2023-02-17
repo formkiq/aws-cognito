@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.4.4
+Description: AWS Cognito 1.4.5
 
 Globals:
   Function:
@@ -880,6 +880,10 @@ Resources:
             - RegionalDomainName
 
 Outputs:
+  HttpApi:
+    Description: The Cognito Login API ID
+    Value:
+      Ref: HttpApi
   ApiEndpoint:
     Description: The Cognito Login API endpoint
     Value: 
