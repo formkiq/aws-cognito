@@ -132,6 +132,13 @@ Conditions:
 
 Resources:
 
+  StageAccessLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 90
+      LogGroupName: 
+        Fn::Sub: "/${AWS::StackName}/APICognitoAccessLogs"
+
   HttpApiStage:
     Type: AWS::ApiGatewayV2::Stage
     DependsOn:
@@ -146,6 +153,12 @@ Resources:
       DefaultRouteSettings:
         ThrottlingBurstLimit: 200
         ThrottlingRateLimit: 100
+      AccessLogSettings:
+        DestinationArn: 
+          Fn::GetAtt: 
+          - StageAccessLogs
+          - Arn
+        Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "integrationStatus": $context.integrationStatus, "integrationLatency": $context.integrationLatency, "responseLength":"$context.responseLength" }'
       Tags:
         StackName: 
           Fn::Sub: "${AWS::StackName}" 
