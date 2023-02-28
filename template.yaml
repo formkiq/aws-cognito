@@ -84,10 +84,9 @@ Parameters:
     Description: The URL to redirect to from Cognito Signup
     AllowedPattern: ".+"
 
-  HostedZone:
-    Description: Amazon API domain Certificate ARN to use
+  HostedZoneId:
+    Description: "(optional) Route53 Hosted Zone Id in which to add A record"
     Type: String
-    Description: Route53 Hosted Zone to create DNS records in - see https://console.aws.amazon.com/route53/v2/HostedZones
     Default: ""
 
   AccessTokenValidity:
@@ -125,10 +124,6 @@ Conditions:
       - Fn::Equals:
         - Ref: ApiDomainCertificateArn
         - ""
-  HasNoApiDomainCertificateArn: 
-    Fn::Equals:
-      - Ref: ApiDomainCertificateArn
-      - ""
 
 Resources:
 
@@ -507,7 +502,6 @@ Resources:
 
   HttpApiUrlParameter:
     Type: AWS::SSM::Parameter
-    Condition: HasNoApiDomainCertificateArn
     DependsOn:
     - HttpApi
     Properties:
@@ -515,26 +509,13 @@ Resources:
       Type: String      
       Name: 
         Fn::Sub: "/formkiq/cognito/${Domain}/CognitoHttpApiUrl"
-      Value: 
-        Fn::GetAtt: 
-          - HttpApi
-          - ApiEndpoint
-      Tags:
-        StackName: 
-          Fn::Sub: "${AWS::StackName}"
-
-  HttpApiUrlParameterCustomDomain:
-    Type: AWS::SSM::Parameter
-    Condition: ApiDomainCertificateArn
-    DependsOn:
-    - HttpApi
-    Properties:
-      Description: "The URL for the Cognito API endpoint"
-      Type: String      
-      Name: 
-        Fn::Sub: "/formkiq/cognito/${Domain}/CognitoHttpApiUrl"
-      Value: 
-        Fn::Sub: "https://${ApiDomain}"
+      Value:
+        Fn::If:
+        - ApiDomainCertificateArn
+        - Fn::Sub: "https://${ApiDomain}"
+        - Fn::GetAtt: 
+            - HttpApi
+            - ApiEndpoint
       Tags:
         StackName: 
           Fn::Sub: "${AWS::StackName}"
@@ -879,8 +860,8 @@ Resources:
     Properties:
       Name: 
         Ref: ApiDomain
-      HostedZoneName: 
-        Ref: HostedZone
+      HostedZoneId: 
+        Ref: HostedZoneId
       Type: A
       AliasTarget:
         HostedZoneId: 
