@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.4.5
+Description: AWS Cognito 1.4.6
 
 Globals:
   Function:
@@ -132,7 +132,7 @@ Resources:
     Properties:
       RetentionInDays: 90
       LogGroupName: 
-        Fn::Sub: "/${AWS::StackName}/APICognitoAccessLogs"
+        Fn::Sub: "/aws/vendedlogs/${AWS::StackName}/APICognitoAccessLogs"
 
   HttpApiStage:
     Type: AWS::ApiGatewayV2::Stage
