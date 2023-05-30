@@ -29,7 +29,9 @@ exports.lambdaHandler = async (event, context) => {
 
       let obj = JSON.parse(body);
       
-      if (path == "/register") {
+      if (path == "/admins/register") {
+        return handleAdminRegister(obj);
+      } else if (path == "/register") {
         return handleRegister(obj);
       } else if (path == "/login") {
         return login(obj, redirectUri);
@@ -113,6 +115,55 @@ function resetPassword(obj) {
     console.log("ERROR: " + error);
     return response(400, error);
   });
+}
+
+function handleAdminRegister(obj) {
+  let requiredFields = ["username", "groups"];
+  
+  if (isValidFields(obj, requiredFields)) {
+    
+    var groups = [];
+    
+    obj.groups.forEach(groupName => {
+      groups.push(createGroup(groupName).then((data) => {
+        return addUserToGroup(groupName, obj.username);
+      }));
+    });
+    
+    if (groups.length == 0) {
+      groups.push(Promise.resolve(""));
+    }
+
+    return Promise.all(groups).then(() => {
+      return response(200, {message:"User registered"});
+    });
+      
+  } else {
+    return response(400, {message: "missing fields 'username', 'password'"});
+  }
+}
+
+function createGroup(groupName) {
+  
+  var params = {
+    GroupName: groupName,
+    UserPoolId: process.env.USER_POOL_ID
+  };
+  
+  return COGNITO_CLIENT.createGroup(params).promise().catch((e) => {
+    console.log(e);
+    return Promise.resolve("cannot create group");
+  });
+}
+
+function addUserToGroup(groupName, username) {
+  var params = {
+    GroupName: groupName,
+    UserPoolId: process.env.USER_POOL_ID,
+    Username: username
+  };
+
+  return COGNITO_CLIENT.adminAddUserToGroup(params).promise();
 }
 
 function handleRegister(obj) {
