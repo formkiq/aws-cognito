@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.4.6
+Description: AWS Cognito 1.5.0
 
 Globals:
   Function:
@@ -167,7 +167,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.4.0"
+          version: "1.5.0"
         paths:
           /confirmRegistration:
             get:
@@ -361,7 +361,39 @@ Resources:
                         type: "string"
               x-amazon-apigateway-integration:
                 $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
-
+          /admins/register:
+            post:
+              operationId: Register
+              description: Allows registering users
+              tags:
+              - Admins
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/AdminRegisterRequest'
+              responses:
+                '200':
+                  description: "200 OK"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+                  content:
+                    application/json:
+                      schema:
+                        "$ref": "#/components/schemas/AdminRegisterResponse"
+              security:
+              - ApiAuthorization: []
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
         components:
           headers:
             AccessControlAllowOrigin:
@@ -466,6 +498,30 @@ Resources:
                   type: "string"
                 clientId:
                   type: "string"
+            AdminRegisterRequest:
+              type: "object"
+              required:
+              - "username"
+              properties:
+                username:
+                  type: string
+                  description: Login Username
+                groups:
+                  type: array
+                  items:
+                    type: string
+            AdminRegisterResponse:
+              type: "object"
+              properties:
+                username:
+                  type: string
+                  description: Login Username
+          securitySchemes:
+            ApiAuthorization:
+              type: "apiKey"
+              name: "Authorization"
+              in: "header"
+              x-amazon-apigateway-authtype: "awsSigv4"
           x-amazon-apigateway-integrations:
             lambdaApi200:
               uri:
