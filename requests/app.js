@@ -124,18 +124,21 @@ function handleAdminRegister(obj) {
     
     var groups = [];
     
-    obj.groups.forEach(groupName => {
-      groups.push(createGroup(groupName).then((data) => {
-        return addUserToGroup(groupName, obj.username);
-      }));
-    });
-    
-    if (groups.length == 0) {
-      groups.push(Promise.resolve(""));
-    }
-
-    return Promise.all(groups).then(() => {
-      return response(200, {message:"User registered"});
+    return createUserAsAdmin(obj.username).then(() => {
+      
+      obj.groups.forEach(groupName => {
+        groups.push(createGroup(groupName).then((data) => {
+          return addUserToGroup(groupName, obj.username);
+        }));
+      });
+      
+      if (groups.length == 0) {
+        groups.push(Promise.resolve(""));
+      }
+  
+      return Promise.all(groups).then(() => {
+        return response(200, {message:"User registered"});
+      });
     });
       
   } else {
@@ -154,6 +157,15 @@ function createGroup(groupName) {
     console.log(e);
     return Promise.resolve("cannot create group");
   });
+}
+
+function createUserAsAdmin(username) {
+  var params = {
+    UserPoolId: process.env.USER_POOL_ID,
+    Username: username
+  };
+
+  return COGNITO_CLIENT.adminCreateUser(params).promise();
 }
 
 function addUserToGroup(groupName, username) {
