@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.5.0
+Description: AWS Cognito 1.5.1
 
 Globals:
   Function:
@@ -167,7 +167,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.5.0"
+          version: "1.5.1"
         paths:
           /confirmRegistration:
             get:
