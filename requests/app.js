@@ -139,6 +139,12 @@ function handleAdminRegister(obj) {
       return Promise.all(groups).then(() => {
         return response(200, {message:"User registered"});
       });
+    }).catch((error) => {
+      if (error.code === "UsernameExistsException") {
+         return response(400, {message: error.message});  
+      } else {
+        return response(500, {message: "an error has occured"});
+      }
     });
       
   } else {
