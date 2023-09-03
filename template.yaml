@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.5.1
+Description: AWS Cognito 1.5.2
 
 Globals:
   Function:
@@ -167,7 +167,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.5.1"
+          version: "1.5.2"
         paths:
           /confirmRegistration:
             get:
@@ -583,7 +583,7 @@ Resources:
       Description: A Lambda function that redirects Signup, handles register, lostpassword & login Requests.
       CodeUri: requests/
       Handler: app.lambdaHandler
-      Runtime: nodejs14.x
+      Runtime: nodejs18.x
       MemorySize: 256
       Timeout: 25
       Role: 
@@ -755,7 +755,7 @@ Resources:
     Properties:
       CodeUri: custom_message/
       Handler: app.lambdaHandler
-      Runtime: nodejs14.x
+      Runtime: nodejs18.x
       Description: Lambda function that processes Cognito Custom Email Messages
       Role: 
         Fn::GetAtt: 
