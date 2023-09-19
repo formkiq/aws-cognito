@@ -1,6 +1,6 @@
 {
   "name": "aws-cognito",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "AWS Cognito API",
   "scripts": {
     "build": "sam build ; gulp",
@@ -23,6 +23,9 @@
     "mockserver": "^3.1.1"
   },
   "dependencies": {
+    "aws-sdk": "^2.847.0"
+  },
+  "bundledDependencies": {
     "aws-sdk": "^2.847.0"
   }
 }

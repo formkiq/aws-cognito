@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.5.2
+Description: AWS Cognito 1.5.3
 
 Globals:
   Function:
@@ -99,6 +99,12 @@ Parameters:
     Type: Number
     Default: 24
 
+  AwsArnPartition:
+    Description: AWS Arn Partition ("aws" or "aws-us-gov")
+    Default: "aws"
+    Type: String
+    AllowedValues: ["aws", "aws-us-gov"]
+
 Conditions:
   HasDomainCertificate: 
     Fn::Not:
@@ -167,7 +173,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.5.2"
+          version: "1.5.3"
         paths:
           /confirmRegistration:
             get:
@@ -525,7 +531,7 @@ Resources:
           x-amazon-apigateway-integrations:
             lambdaApi200:
               uri:
-                Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CognitoRequests.Arn}/invocations"
+                Fn::Sub: "arn:${AwsArnPartition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CognitoRequests.Arn}/invocations"
               responses:
                 default:
                   statusCode: "200"
@@ -539,7 +545,7 @@ Resources:
               payloadFormatVersion: "1.0"  
             lambdaApi301:
               uri:
-                Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CognitoRequests.Arn}/invocations"
+                Fn::Sub: "arn:${AwsArnPartition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CognitoRequests.Arn}/invocations"
               responses:
                 default:
                   statusCode: "301"
@@ -659,7 +665,7 @@ Resources:
               - cognito-idp:AdminConfirmSignUp
               - cognito-idp:AdminUpdateUserAttributes
               Resource: 
-                Fn::Sub: 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPool}'
+                Fn::Sub: "arn:${AwsArnPartition}:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPool}"
 
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
@@ -831,17 +837,18 @@ Resources:
           - Effect: Allow
             Action:
             - logs:*
-            Resource: arn:aws:logs:*:*:*
+            Resource: 
+              Fn::Sub: "arn:${AwsArnPartition}:logs:*:*:*"
           - Effect: Allow
             Action:
             - ssm:GetParameters
             Resource: 
-            - Fn::Sub: "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/formkiq/cognito/*"
+            - Fn::Sub: "arn:${AwsArnPartition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/formkiq/cognito/*"
           - Effect: Allow
             Action:
             - s3:GetObject
             Resource:
-            - Fn::Sub: "arn:aws:s3:::${CognitoConfig}/*"
+            - Fn::Sub: "arn:${AwsArnPartition}:s3:::${CognitoConfig}/*"
 
   UserPoolDomainCustom: 
     Type: AWS::Cognito::UserPoolDomain 
