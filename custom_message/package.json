@@ -1,19 +1,22 @@
 {
-  "name": "signup",
-  "version": "1.0.0",
-  "description": "AWS Cognito Signup",
-  "main": "app.js",
-  "repository": "https://github.com/awslabs/aws-sam-cli/tree/develop/samcli/local/init/templates/cookiecutter-aws-sam-hello-nodejs",
-  "author": "SAM CLI",
-  "license": "MIT",
-  "dependencies": {
-    "axios": "^0.21.1"
-  },
-  "scripts": {
-    "test": "nyc --reporter=html --reporter=text mocha tests/unit/ --timeout 10000"
-  },
-  "devDependencies": {
-    "mocha": "^8.2.1",
-    "nyc": "^15.1.0"
-  }
+    "name": "signup",
+    "version": "1.0.0",
+    "description": "AWS Cognito Signup",
+    "main": "app.js",
+    "repository": "https://github.com/awslabs/aws-sam-cli/tree/develop/samcli/local/init/templates/cookiecutter-aws-sam-hello-nodejs",
+    "author": "SAM CLI",
+    "license": "MIT",
+    "dependencies":
+    {
+        "aws-sdk": "^2.847.0"
+    },
+    "scripts":
+    {
+        "test": "nyc --reporter=html --reporter=text mocha tests/unit/ --timeout 10000"
+    },
+    "devDependencies":
+    {
+        "mocha": "^8.2.1",
+        "nyc": "^15.1.0"
+    }
 }
