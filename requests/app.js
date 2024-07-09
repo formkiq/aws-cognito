@@ -313,7 +313,9 @@ function getUser(username) {
 function fixForcePasswordChange(username) {
   return getUser(username).then((user) => {
     if ("FORCE_CHANGE_PASSWORD" === user.UserStatus) {
-      var password = randomString(16, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+      var password = randomString(16, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') +
+        randomString(2, '0123456789') + randomString(2, 'abcdefghijklmnopqrstuvwxyz') + randomString(2, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') + randomString(2, '^$*.[]{}()?!@#%&');
+
       var params = {
         Password: password,
         UserPoolId: process.env.USER_POOL_ID,
@@ -408,7 +410,7 @@ function loginOAuth2(code, redirectUri) {
     });
     
   }).catch(() => {
-    return response(301, redirectUri + "?success=false");
+    return response(400, "Bad Code");
   });
 }
 
