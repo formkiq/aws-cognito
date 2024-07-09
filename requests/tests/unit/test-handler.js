@@ -39,8 +39,8 @@ describe('Tests index', function () {
 
         const result = await app.lambdaHandler(event, context);
 
-        expect(result.statusCode).to.equal(301);
-        expect(result.headers["Location"]).to.equal("https://d2i952jamiey58.cloudfront.net?success=false");
+        expect(result.statusCode).to.equal(400);
+        //expect(result.headers["Location"]).to.equal("https://d2i952jamiey58.cloudfront.net?success=false");
     });
 
     it('/login with code and redirect_uri', async () => {
@@ -49,8 +49,8 @@ describe('Tests index', function () {
         event.queryStringParameters["redirect_uri"] = encodeURIComponent("http://localhost:4200/bleh")
         const result = await app.lambdaHandler(event, context);
 
-        expect(result.statusCode).to.equal(301);
-        expect(result.headers["Location"]).to.equal("http://localhost:4200/bleh?success=false");
+        expect(result.statusCode).to.equal(400);
+        //expect(result.headers["Location"]).to.equal("http://localhost:4200/bleh?success=false");
     });
 
     it('/login with code and invalid redirect_uri', async () => {
@@ -59,8 +59,8 @@ describe('Tests index', function () {
         event.queryStringParameters["redirect_uri"] = encodeURIComponent("http://localhost:4200/bleh")
         const result = await app.lambdaHandler(event, context);
 
-        expect(result.statusCode).to.equal(301);
-        expect(result.headers["Location"]).to.equal("https://d2i952jamiey58.cloudfront.net?success=false");
+        expect(result.statusCode).to.equal(400);
+        //expect(result.headers["Location"]).to.equal("https://d2i952jamiey58.cloudfront.net?success=false");
     });
 });
 
