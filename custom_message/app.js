@@ -65,9 +65,10 @@ exports.lambdaHandler = async (event, context, callback) => {
                 const { clientId } = event.callerContext;
                 const { email } = event.request.userAttributes;
 
+                const code = encodeURIComponent(codeParameter);
                 const userStatus = event.request.userAttributes['cognito:user_status'];
         
-                const link = `${urlCache.Value}/confirmSignUp?userStatus=${userStatus}&code=${codeParameter}&username=${userName}&clientId=${clientId}&region=${region}&email=${email}`;
+                const link = `${urlCache.Value}/confirmSignUp?userStatus=${userStatus}&code=${code}&username=${userName}&clientId=${clientId}&region=${region}&email=${email}`;
 
                 event.response.emailSubject = subject;
                 event.response.emailMessage = processMessage(event.request.userAttributes, message, link);
@@ -79,9 +80,10 @@ exports.lambdaHandler = async (event, context, callback) => {
                 const { clientId } = event.callerContext;
                 const { email } = event.request.userAttributes;
                 
+                const code = encodeURIComponent(codeParameter);
                 const userStatus = event.request.userAttributes['cognito:user_status'];
         
-                const link = `${process.env.REDIRECT_URI}/change-password?userStatus=${userStatus}&code=${codeParameter}&username=${userName}&clientId=${clientId}&region=${region}&email=${email}`;
+                const link = `${process.env.REDIRECT_URI}/change-password?userStatus=${userStatus}&code=${code}&username=${userName}&clientId=${clientId}&region=${region}&email=${email}`;
 
                 event.response.emailSubject = subject;
                 event.response.emailMessage = processMessage(event.request.userAttributes, message, link);
@@ -93,9 +95,10 @@ exports.lambdaHandler = async (event, context, callback) => {
                 const { clientId } = event.callerContext;
                 const { email } = event.request.userAttributes;
 
+                const code = encodeURIComponent(codeParameter);
                 const userStatus = event.request.userAttributes['cognito:user_status'];
         
-                const link = `${urlCache.Value}/confirmRegistration?userStatus=${userStatus}&code=${codeParameter}&username=${userName}&clientId=${clientId}&region=${region}&email=${usernameParameter}`;
+                const link = `${urlCache.Value}/confirmRegistration?userStatus=${userStatus}&code=${code}&username=${userName}&clientId=${clientId}&region=${region}&email=${usernameParameter}`;
 
                 event.response.emailSubject = subject;
                 event.response.emailMessage = processMessage(event.request.userAttributes, message, link);
