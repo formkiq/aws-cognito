@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.5.4
+Description: AWS Cognito 1.5.5
 
 Globals:
   Function:
@@ -106,6 +106,20 @@ Parameters:
     AllowedValues: ["aws", "aws-us-gov"]
 
 Conditions:
+
+  IsEmptyOrUnderscore:
+    Fn::Or:
+      - Fn::Equals:
+        - Ref: HostedZoneId
+        - ""
+      - Fn::Equals:
+        - Ref: HostedZoneId
+        - "_"
+
+  HasHostedZoneId:
+    Fn::Not:
+      - Condition: IsEmptyOrUnderscore
+
   HasDomainCertificate: 
     Fn::Not:
       - Fn::Equals:
@@ -173,7 +187,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.5.4"
+          version: "1.5.5"
         paths:
           /confirmRegistration:
             get:
@@ -907,9 +921,7 @@ Resources:
     Type: AWS::ApiGatewayV2::ApiMapping
     Condition: ApiDomainCertificateArn
     DependsOn:
-    - HttpApiStage
     - HttpApi
-    - ApiRoute53
     Properties:
       ApiId: 
         Ref: HttpApi
@@ -919,7 +931,7 @@ Resources:
 
   ApiRoute53:
     Type: AWS::Route53::RecordSet
-    Condition: ApiDomainCertificateArn
+    Condition: HasHostedZoneId
     Properties:
       Name: 
         Ref: ApiDomain
