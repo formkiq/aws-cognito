@@ -188,6 +188,11 @@ Conditions:
         - Ref: ApiDomainCertificateArn
         - ""
 
+  IsLogFormatJSON: 
+    Fn::Equals:
+      - Ref: LogFormat
+      - JSON
+      
 Resources:
 
   StageAccessLogs:
