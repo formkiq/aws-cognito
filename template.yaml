@@ -146,7 +146,7 @@ Parameters:
     Description: >
       The level of logging for the AWS Platform System logs. Only used when LogFormat is JSON
     Default: "INFO"
-    AllowedValues: ["DEBUG", "INFO", "WARN"]
+    AllowedValues: ["TRACE", "DEBUG", "INFO", "WARN"]
 
 Conditions:
 
