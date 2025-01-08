@@ -139,14 +139,14 @@ Parameters:
     Description: >
       The level of logging for the FormKiQ Application logs. Only used when LogFormat is JSON
     Default: "INFO"
-    AllowedValues: ["DEBUG", "INFO", "ERROR"]
+    AllowedValues: ["TRACE", "DEBUG", "INFO", "ERROR"]
 
   LogLevelSystem:
     Type: String
     Description: >
       The level of logging for the AWS Platform System logs. Only used when LogFormat is JSON
     Default: "INFO"
-    AllowedValues: ["TRACE", "DEBUG", "INFO", "WARN"]
+    AllowedValues: ["DEBUG", "INFO", "WARN"]
 
 Conditions:
 
