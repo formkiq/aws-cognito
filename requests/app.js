@@ -12,9 +12,67 @@ const COGNITO_CLIENT = new AWS.CognitoIdentityServiceProvider({
  * Cognito Request Handler.
  * 
  */
+
+function maskCredentials(event) {
+  // Ensure the event has a body property.
+  if (event && event.body) {
+    let bodyData;
+
+    // If the body is a string, attempt to parse it.
+    if (typeof event.body === "string") {
+      try {
+        bodyData = JSON.parse(event.body);
+      } catch (error) {
+        console.error("Error parsing JSON from body:", error);
+        return event; // Return the event unmodified if parsing fails.
+      }
+    } else if (typeof event.body === "object") {
+      bodyData = event.body;
+    }
+
+    // Mask the username and password fields if they exist.
+    if (bodyData.username) {
+      bodyData.username = "*******";
+    }
+    if (bodyData.password) {
+      bodyData.password = "*******";
+    }
+
+    // Update the event.body.
+    // If the original body was a string, convert back to JSON string.
+    event.body = typeof event.body === "string"
+      ? JSON.stringify(bodyData)
+      : bodyData;
+  }
+  return event;
+}
+
+const logMessage = (message, level) => {
+  const logFormat = process.env.AWS_LAMBDA_LOG_FORMAT || 'text';
+  const logLevel = process.env.LOG_LEVEL || 'INFO';
+  const shouldLogEvent = process.env.LOG_LEVEL === level || "ERROR" === level;
+
+  if (shouldLogEvent) {
+
+    var logMsg = "";
+    if (typeof message === 'string') {
+      logMsg = message;
+    } else {
+      logMsg = JSON.stringify(message);
+    }
+
+    if (logFormat.toLowerCase() === 'json') {
+
+      console.log(JSON.stringify({ level, message: logMsg }));
+    } else {
+      console.log(logMsg);
+    }
+  }
+};
+
 exports.lambdaHandler = async (event, context) => {
 
-    console.info(JSON.stringify(event));
+    logMessage(maskCredentials(event), "DEBUG");
     
     let path = event.path;
     let redirectUri = getRedirectUri(event);
@@ -75,7 +133,7 @@ function confirmRegistration(event, redirectUri) {
     
     return response(301, redirectUri + "?success=true&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code) + "&session=" + encodeURIComponent(session));
   }).catch((error) => {
-    console.log("ERROR: " + JSON.stringify(error));
+    logMessage(error, "ERROR");
     return response(301, redirectUri + "?success=false&username=" + username + "&userStatus=" + userStatus + "&code=" + encodeURIComponent(code) + "&session=" + encodeURIComponent(session));
   });
 }
@@ -95,7 +153,7 @@ function confirmSignUp(event, redirectUri) {
   return COGNITO_CLIENT.confirmSignUp(params).promise().then((data) => {
     return response(301, redirectUri + "?success=true&username=" + username + "&userStatus=" + userStatus);
   }).catch((error) => {
-    console.log("ERROR: " + error);
+    logMessage(error, "ERROR");
     return response(301, redirectUri + "?success=false&username=" + username + "&userStatus=" + userStatus);
   });
 }
@@ -112,7 +170,7 @@ function resetPassword(obj) {
   return COGNITO_CLIENT.confirmForgotPassword(params).promise().then((data) => {
     return response(200, {message:"Password Updated"});
   }).catch((error) => {
-    console.log("ERROR: " + error);
+    logMessage(error, "ERROR");
     return response(400, error);
   });
 }
@@ -160,7 +218,7 @@ function createGroup(groupName) {
   };
   
   return COGNITO_CLIENT.createGroup(params).promise().catch((e) => {
-    console.log(e);
+    logMessage(e, "ERROR");
     return Promise.resolve("cannot create group");
   });
 }
@@ -245,7 +303,7 @@ function handleRegister(obj) {
       });
 
     }).catch((error) => {
-      console.log("ERROR: " + error);
+      logMessage(error, "ERROR");
       return response(400, error);
     });
 
@@ -416,7 +474,6 @@ function loginOAuth2(code, redirectUri) {
 
 function send(opts, resolve, reject) {
   const req = https.request(opts, res => {
-    console.log("statusCode: " + res.statusCode);
   
     var body = '';
   
@@ -424,9 +481,7 @@ function send(opts, resolve, reject) {
       body += chunk;
     });
   
-    res.on('end', () => {
-      console.log("BODY: " + body);
-  
+    res.on('end', () => {  
       if (res.statusCode == 200 || res.statusCode == 201) {
         resolve(body);
       } else {
@@ -511,7 +566,6 @@ function response(statusCode, message) {
     };
   }
   
-  console.log(JSON.stringify(resp));
   return resp;
 }
 
