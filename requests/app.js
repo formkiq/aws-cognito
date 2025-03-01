@@ -63,7 +63,7 @@ const logMessage = (message, level) => {
 
     if (logFormat.toLowerCase() === 'json') {
 
-      console.log(JSON.stringify({ level, message: logMsg }));
+      console.log(JSON.stringify(logMsg));
     } else {
       console.log(logMsg);
     }
