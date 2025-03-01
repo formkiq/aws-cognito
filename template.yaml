@@ -674,6 +674,8 @@ Resources:
             Ref: CognitoUserPoolClient
           REDIRECT_URI: 
             Ref: RedirectUrl
+          LOG_LEVEL:
+            Ref: LogLevelApplication
           COGNITO_DOMAIN:
             Fn::If: 
             - HasDomainCertificate
