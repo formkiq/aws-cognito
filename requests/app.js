@@ -13,8 +13,10 @@ const COGNITO_CLIENT = new AWS.CognitoIdentityServiceProvider({
  * 
  */
 
-function maskCredentials(event) {
+function maskCredentials(data) {
   // Ensure the event has a body property.
+  const event = JSON.parse(JSON.stringify(data));
+
   if (event && event.body) {
     let bodyData;
 
