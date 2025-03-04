@@ -659,7 +659,6 @@ Resources:
       Handler: app.lambdaHandler
       Runtime: nodejs18.x
       MemorySize: 512
-      AutoPublishCodeSha256: 2508cb43f00692f9acfd465a95a952b4f88b56d07d0d810cb4dbae53196b5b5c
       Timeout: 25
       Role: 
         Fn::GetAtt: 
@@ -856,7 +855,6 @@ Resources:
       Runtime: nodejs18.x
       Description: Lambda function that processes Cognito Custom Email Messages
       MemorySize: 512
-      AutoPublishCodeSha256: 2508cb43f00692f9acfd465a95a952b4f88b56d07d0d810cb4dbae53196b5b5c
       Role: 
         Fn::GetAtt: 
           - CognitoCustomMessageRole
