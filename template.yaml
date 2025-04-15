@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.5.7
+Description: AWS Cognito 1.6.0
 
 Globals:
   Function:
@@ -148,6 +148,14 @@ Parameters:
     Default: "INFO"
     AllowedValues: ["DEBUG", "INFO", "WARN"]
 
+  EnableDeletionProtection:
+    Description: "Enable deletion protection on AWS Services that support the feature"
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+
 Conditions:
 
   IsEmptyOrUnderscore:
@@ -192,7 +200,12 @@ Conditions:
     Fn::Equals:
       - Ref: LogFormat
       - JSON
-      
+
+  IsDeletionProtectionEnabled:
+    Fn::Equals:
+      - Ref: EnableDeletionProtection
+      - "true"
+
 Resources:
 
   StageAccessLogs:
@@ -235,7 +248,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.5.7"
+          version: "1.6.0"
         paths:
           /confirmRegistration:
             get:
@@ -757,6 +770,11 @@ Resources:
     DependsOn:
     - CognitoCustomMessage
     Properties:
+      DeletionProtection: 
+        Fn::If:
+         - IsDeletionProtectionEnabled
+         - "ACTIVE"
+         - "INACTIVE"
       AccountRecoverySetting:
         RecoveryMechanisms:
           - Name: verified_email
