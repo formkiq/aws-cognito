@@ -870,7 +870,7 @@ Resources:
     Properties:
       CodeUri: custom_message/
       Handler: app.lambdaHandler
-      Runtime: nodejs18.x
+      Runtime: nodejs22.x
       Description: Lambda function that processes Cognito Custom Email Messages
       MemorySize: 512
       Role: 
