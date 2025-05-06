@@ -214,6 +214,9 @@ Resources:
       RetentionInDays: 90
       LogGroupName: 
         Fn::Sub: "/aws/vendedlogs/${AWS::StackName}/APICognitoAccessLogs"
+      Tags:
+        - Key: Application
+          Value: FormKiQ
 
   HttpApiStage:
     Type: AWS::ApiGatewayV2::Stage
@@ -236,8 +239,7 @@ Resources:
           - Arn
         Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "integrationStatus": $context.integrationStatus, "integrationLatency": $context.integrationLatency, "responseLength":"$context.responseLength" }'
       Tags:
-        StackName: 
-          Fn::Sub: "${AWS::StackName}" 
+        Application: FormKiQ
 
   HttpApi:
     Type: AWS::ApiGatewayV2::Api
@@ -654,14 +656,16 @@ Resources:
             - HttpApi
             - ApiEndpoint
       Tags:
-        StackName: 
-          Fn::Sub: "${AWS::StackName}"
+        Application: FormKiQ 
 
   CognitoRequestsLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays:
         Ref: LogRetentionInDays
+      Tags:
+        - Key: Application
+          Value: "FormKiQ"
 
   CognitoRequests:
     Type: AWS::Serverless::Function
@@ -670,7 +674,7 @@ Resources:
       Description: A Lambda function that redirects Signup, handles register, lostpassword & login Requests.
       CodeUri: requests/
       Handler: app.lambdaHandler
-      Runtime: nodejs18.x
+      Runtime: nodejs22.x
       MemorySize: 512
       Timeout: 25
       Role: 
@@ -710,8 +714,7 @@ Resources:
           - Ref: LogLevelSystem
           - Ref: AWS::NoValue
       Tags:
-        StackName: 
-          Fn::Sub: "${AWS::StackName}"
+        Application: FormKiQ 
 
   CognitoRequestsApiInvokePermission:
     Type: "AWS::Lambda::Permission"
@@ -728,9 +731,8 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       Tags:
-        - Key: "StackName"
-          Value: 
-            Fn::Sub: "${AWS::StackName}"
+        - Key: Application
+          Value: FormKiQ
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -837,6 +839,7 @@ Resources:
           Mutable: false
           Required: true
       UserPoolTags:
+        Application: FormKiQ
         StackName: 
           Fn::Sub: "${AWS::StackName}"
 
@@ -864,6 +867,9 @@ Resources:
     Properties:
       RetentionInDays:
         Ref: LogRetentionInDays
+      Tags:
+        - Key: Application
+          Value: "FormKiQ"
         
   CognitoCustomMessage:  
     Type: AWS::Serverless::Function
@@ -888,8 +894,7 @@ Resources:
           LOG_LEVEL:
             Ref: LogLevelApplication
       Tags:
-        StackName: 
-          Fn::Sub: "${AWS::StackName}"
+        Application: FormKiQ 
       LoggingConfig:
         LogGroup:
           Ref: CognitoCustomMessageLogGroup
@@ -919,9 +924,8 @@ Resources:
         BlockPublicPolicy: true
         RestrictPublicBuckets: true
       Tags:
-        - Key: "StackName"
-          Value: 
-            Fn::Sub: "${AWS::StackName}"
+        - Key: Application
+          Value: FormKiQ
 
   CognitoCustomMessagePermission:
     Type: AWS::Lambda::Permission
@@ -942,9 +946,8 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       Tags:
-        - Key: "StackName"
-          Value: 
-            Fn::Sub: "${AWS::StackName}"
+        - Key: Application
+          Value: FormKiQ
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -1027,6 +1030,7 @@ Resources:
       - CertificateArn: 
           Ref: ApiDomainCertificateArn
       Tags:
+        Application: FormKiQ
         StackName: 
           Fn::Sub: "${AWS::StackName}"
 
