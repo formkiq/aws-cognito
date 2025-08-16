@@ -12,7 +12,7 @@ Parameters:
     Type: String
     Description: "User pool feature plan (tier)."
     AllowedValues: ["LITE", "ESSENTIALS", "PLUS"]
-    Default: "ESSENTIALS"
+    Default: "LITE"
 
   UserPoolName:
     Type: String
