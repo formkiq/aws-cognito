@@ -1,12 +1,18 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.6.0
+Description: AWS Cognito 1.6.1
 
 Globals:
   Function:
     Timeout: 15
 
 Parameters:
+
+  UserPoolTier:
+    Type: String
+    Description: "User pool feature plan (tier)."
+    AllowedValues: ["LITE", "ESSENTIALS", "PLUS"]
+    Default: "ESSENTIALS"
 
   UserPoolName:
     Type: String
@@ -250,7 +256,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.6.0"
+          version: "1.6.1"
         paths:
           /confirmRegistration:
             get:
@@ -783,6 +789,8 @@ Resources:
             Priority: 1
       UserPoolName: 
         Ref: UserPoolName
+      UserPoolTier: 
+        Ref: UserPoolTier
       EmailConfiguration:
         EmailSendingAccount: 
           Fn::If: 
