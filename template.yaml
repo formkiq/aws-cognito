@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.6.1
+Description: AWS Cognito 1.6.2
 
 Globals:
   Function:
@@ -196,11 +196,16 @@ Conditions:
     Fn::Equals:
       - Ref: DomainCertificateArn
       - ""
-  ApiDomainCertificateArn: 
+
+  ApiDomainCertificateArn:
     Fn::Not:
-      - Fn::Equals:
-        - Ref: ApiDomainCertificateArn
-        - ""
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: ApiDomainCertificateArn
+              - ""
+          - Fn::Equals:
+              - Ref: ApiDomainCertificateArn
+              - "_"
 
   IsLogFormatJSON: 
     Fn::Equals:
@@ -256,7 +261,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.6.1"
+          version: "1.6.2"
         paths:
           /confirmRegistration:
             get:
