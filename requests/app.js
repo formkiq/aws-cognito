@@ -96,7 +96,7 @@ exports.lambdaHandler = async (event, context) => {
       } else if (path == "/login") {
         return login(obj, redirectUri);
       } else if (path == "/logout") {
-        return login(obj);
+        return logout(obj);
       } else if (path == "/changePassword") {
         return changepassword(obj);
       } else if (path == "/forgotPassword") {
