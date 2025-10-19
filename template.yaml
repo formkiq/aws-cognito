@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.6.2
+Description: AWS Cognito 1.6.3
 
 Globals:
   Function:
@@ -261,7 +261,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.6.2"
+          version: "1.6.3"
         paths:
           /confirmRegistration:
             get:
@@ -336,6 +336,32 @@ Resources:
                   application/json:
                     schema:
                       $ref: '#/components/schemas/CognitoLogin'
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+              x-amazon-apigateway-integration:
+                $ref: "#/components/x-amazon-apigateway-integrations/lambdaApi200"
+          /logout:
+            post:
+              description: Cognito Logout
+              tags:
+              - Cognito
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/CognitoLogout'
               responses:
                 "200":
                   description: "200 response"
@@ -527,6 +553,13 @@ Resources:
                 username:
                   type: "string"
                 password:
+                  type: "string"
+            CognitoLogout:
+              required:
+              - "accessToken"
+              type: "object"
+              properties:
+                accessToken:
                   type: "string"
             CognitoRespondToAuthChallenge:
               required:

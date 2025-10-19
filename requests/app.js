@@ -95,6 +95,8 @@ exports.lambdaHandler = async (event, context) => {
         return handleRegister(obj);
       } else if (path == "/login") {
         return login(obj, redirectUri);
+      } else if (path == "/logout") {
+        return login(obj);
       } else if (path == "/changePassword") {
         return changepassword(obj);
       } else if (path == "/forgotPassword") {
@@ -524,6 +526,24 @@ function login(obj, redirectUri) {
       return loginOAuth2(obj.code, redirectUri);
   } else {
     return response(400, {message: "missing fields 'username'"});
+  }
+}
+
+function logout(obj) {
+  
+  let requiredFields = ["accessToken"];
+  if (isValidFields(obj, requiredFields)) {
+
+    return COGNITO_CLIENT.globalSignOut({
+       AccessToken: obj.accessToken
+    }).promise().then((data) => {
+      return response(200, data);
+    }).catch((error) => {
+      return response(400, error);
+    });
+
+  } else {
+    return response(400, {message: "missing fields 'accessToken'"});
   }
 }
 
