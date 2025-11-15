@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.6.3
+Description: AWS Cognito 1.6.4
 
 Globals:
   Function:
@@ -261,7 +261,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.6.3"
+          version: "1.6.4"
         paths:
           /confirmRegistration:
             get:
@@ -786,7 +786,7 @@ Resources:
             - lambda.amazonaws.com
           Action:
           - sts:AssumeRole
-      Path: /
+      Path: /service-role/
       Policies:
         -
           PolicyName: apigatewaylambdarole
