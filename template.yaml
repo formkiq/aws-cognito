@@ -1,12 +1,24 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AWS Cognito 1.6.4
+Description: AWS Cognito 1.6.5
 
 Globals:
   Function:
     Timeout: 15
 
 Parameters:
+
+  AppEnvironment:
+    Type: String
+    Description: Unique Application Environment Identifier, IE dev/staging/prod
+    Default: ""
+
+  VpcStackName:
+    Type: String
+    Description: >
+      The name of the CloudFormation VPC stack that can be created after the initial FormKiQ install, using the add-on CloudFormation template for VPC https://docs.formkiq.com/docs/getting-started/quick-start#create-vpc.
+      Some services such as Typesense, and OpenSearch require a VPC. Only required if you are using any of these services; otherwise, this can remain empty.
+    Default: ""
 
   UserPoolTier:
     Type: String
@@ -261,7 +273,7 @@ Resources:
           title: 
             Fn::Sub: "${AWS::StackName} Cognito API"
           description: "Cognito HTTP API"
-          version: "1.6.4"
+          version: "1.6.5"
         paths:
           /confirmRegistration:
             get:
