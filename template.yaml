@@ -229,6 +229,11 @@ Conditions:
       - Ref: EnableDeletionProtection
       - "true"
 
+  CreateApiRoute53:
+    Fn::And:
+      - Condition: HasHostedZoneId
+      - Condition: ApiDomainCertificateArn
+      
 Resources:
 
   StageAccessLogs:
@@ -1106,7 +1111,7 @@ Resources:
 
   ApiRoute53:
     Type: AWS::Route53::RecordSet
-    Condition: HasHostedZoneId
+    Condition: CreateApiRoute53
     Properties:
       Name: 
         Ref: ApiDomain
